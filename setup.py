@@ -33,7 +33,7 @@ print("""-----------------------------------
 """.format(version))
 
 setup(
-    name = 'multiqc',
+    name = 'multiqc_dm',
     version = version,
     author = 'Phil Ewels',
     author_email = 'phil.ewels@scilifelab.se',
@@ -73,6 +73,7 @@ setup(
             'bowtie1 = multiqc.modules.bowtie1:MultiqcModule',
             'bowtie2 = multiqc.modules.bowtie2:MultiqcModule',
             'busco = multiqc.modules.busco:MultiqcModule',
+            'centrifuge = multiqc.modules.centrifuge:MultiqcModule',
             'clusterflow = multiqc.modules.clusterflow:MultiqcModule',
             'conpair = multiqc.modules.conpair:MultiqcModule',
             'custom_content = multiqc.modules.custom_content:custom_module_classes', # special case

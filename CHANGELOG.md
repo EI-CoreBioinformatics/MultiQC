@@ -1,5 +1,9 @@
 # MultiQC Version History
 
+## MultiQC Dan Maplesons fork
+Added Centrifuge module
+
+
 ## MultiQC v1.3dev
 
 #### Breaking changes
