@@ -1,7 +1,8 @@
 # MultiQC Version History
 
 ## MultiQC Dan Maplesons fork
-Added Centrifuge module
+Added Centrifuge module, this only works on centrifuge summary files that are generated from
+centrifuge report files using a custom script.
 
 
 ## MultiQC v1.3dev

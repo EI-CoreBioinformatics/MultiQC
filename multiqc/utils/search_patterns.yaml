@@ -39,7 +39,7 @@ bowtie2:
 busco:
     fn: 'short_summary_*'
 centrifuge:
-    fn: '*_centrifuge_report.tsv'
+    fn: '*_centrifuge.summary'
 custom_content:
     fn_re: '.+_mqc\.(yaml|yml|json|txt|csv|tsv|log|out)'
 clusterflow/logs:

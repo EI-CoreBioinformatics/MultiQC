@@ -33,7 +33,7 @@ print("""-----------------------------------
 """.format(version))
 
 setup(
-    name = 'multiqc_dm',
+    name = 'multiqc',
     version = version,
     author = 'Phil Ewels',
     author_email = 'phil.ewels@scilifelab.se',
