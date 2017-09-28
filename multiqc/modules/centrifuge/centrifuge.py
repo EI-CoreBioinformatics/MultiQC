@@ -29,9 +29,10 @@ class MultiqcModule(BaseMultiqcModule):
         self.cls_lineage_data = {}
         self.els_lineage_data = {}
         self.kingdom_data = {}
+        self.rank_data={}
         for f in self.find_log_files('centrifuge', filehandles=True):
             s_name = self.clean_s_name(f['s_name'][:-11], f['root'])
-            self.table_data[s_name], self.cls_lineage_data[s_name], self.els_lineage_data[s_name], self.kingdom_data[s_name] = self.parse_cf_reports(f)
+            self.table_data[s_name], self.cls_lineage_data[s_name], self.els_lineage_data[s_name], self.kingdom_data[s_name], self.rank_data[s_name] = self.parse_cf_reports(f)
             self.add_data_source(f, s_name)
 
         self.table_data = self.ignore_samples(self.table_data)
@@ -46,6 +47,11 @@ class MultiqcModule(BaseMultiqcModule):
         log.info("Found {} reports".format(len(self.table_data)))
 
         headers = OrderedDict()
+        headers["total_hits"] = {
+            'title': 'Total Hits',
+            'description': "Total hits to DB",
+            'format': '{:,.0f}'
+        }
         headers["actual_taxon"] = {
             'title': 'Classified Taxon',
             'description': "Classified taxon"
@@ -191,8 +197,16 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         self.add_section(
-            name='Classified taxons lineage',
+            name='Rank percentages',
             anchor='centrifuge-third',
+            description='Bar plot showing the percentage of hits occuring at each level.',
+            helptext="Help?",
+            plot=bargraph.plot(self.rank_data, cats, lineage_config)
+        )
+
+        self.add_section(
+            name='Classified taxons lineage',
+            anchor='centrifuge-fourth',
             description='Bar plot showing the classified taxons lineage (largest taxa at each taxonomic rank).',
             helptext="Help?",
             plot=bargraph.plot(self.cls_lineage_data, cats, lineage_config)
@@ -200,7 +214,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.add_section(
             name='Expected taxons lineage',
-            anchor='centrifuge-fourth',
+            anchor='centrifuge-fifth',
             description='Bar plot showing the expected taxons lineage (largest taxa at each taxonomic rank).',
             helptext="Help?",
             plot=bargraph.plot(self.els_lineage_data, cats, lineage_config)
@@ -236,82 +250,110 @@ class MultiqcModule(BaseMultiqcModule):
     def parse_cf_reports(self, f):
 
         table_data = {}
-        cls_lineage_data = {}
-        els_lineage_data = None
 
-        at_start = True
-        in_ctl = 0
-        in_etl = 0
-        in_k = 0
+        exp_present = False
 
-        ctl_header = ""
-        ctl_perc = ""
-        etl_header = ""
-        etl_perc = ""
-        k_header = ""
-        k_perc = ""
-
-        i = 0
         for l in f['f']:
             line = l.strip()
 
-            if line.startswith("Expected Taxon ID provided"):
-                at_start = False
-                continue
+            if line.startswith("Classified Taxon:"):
+                name, id, rank, rank_id = self.parse_taxon(line[18:].strip())
+                table_data["actual_taxon"] = name + " (" + id + ")"
+                table_data["actual_taxon_rank"] = rank
+                table_data["actual_taxon_rank_id"] = rank_id
+            elif line.startswith("Expected Taxon:"):
+                name, id, rank, rank_id = self.parse_taxon(line[16:].strip())
+                table_data["expected_taxon"] = name + " (" + id + ")"
+                table_data["expected_taxon_rank"] = rank
+                table_data["expected_taxon_rank_id"] = rank_id
+            elif line.startswith("MRCA Taxon:"):
+                name, id, rank, rank_id = self.parse_taxon(line[11:].strip())
+                table_data["mrca_taxon"] = name + " (" + id + ")"
+                table_data["mrca_taxon_rank"] = rank
+                table_data["mrca_taxon_rank_id"] = rank_id
+            elif line.startswith("Expected Taxon ID provided"):
+                exp_present = True
+            elif line.startswith("Total hits"):
+                table_data["total_hits"] = int(line.split(':')[1].strip())
 
-            if in_ctl == 1:
-                ctl_header = line
-                in_ctl = 2
-            elif in_ctl == 2:
-                ctl_perc = line
-                in_ctl = 0
+        cls_lineage_data = self.extract_lineage(f, "Classified Taxon's Lineage")
+        kingdom_data = self.extract_kingdom(f)
+        rank_data = self.extract_lineage(f, "Rank Perc")
 
-            if in_etl == 1:
-                etl_header = line
-                in_etl = 2
-            elif in_etl == 2:
-                etl_perc = line
-                in_etl = 0
+        els_lineage_data = {}
+        if exp_present:
+            els_lineage_data = self.extract_lineage(f, "Expected Taxon's Lineage")
+        else:
+            for i, r in enumerate(TaxRank):
+                els_lineage_data[r.name.lower()] = 100.0 if i == 0 else 0.0
 
-            if in_k == 1:
-                k_header = line
-                in_k = 2
-            elif in_k == 2:
-                k_perc = line
-                in_k = 0
+        return table_data, cls_lineage_data, els_lineage_data, kingdom_data, rank_data
 
-            if at_start:
-                if line.startswith("Classified Taxon:"):
-                    name, id, rank, rank_id = self.parse_taxon(line[18:].strip())
-                    table_data["actual_taxon"] = name + " (" + id + ")"
-                    table_data["actual_taxon_rank"] = rank
-                    table_data["actual_taxon_rank_id"] = rank_id
-                elif line.startswith("Classified Taxon's Lineage"):
-                    in_ctl = 1
-                elif line.startswith("Kingdom Perc"):
-                    in_k = 1
+        
+
+    def extract_lineage(self, f, header):
+
+        desc_str = ""
+        val_str = ""
+        in_section = 0
+        lineage_data = {}
+
+        f['f'].seek(0)
+
+        for l in f['f']:
+            line = l.strip()
+
+            if in_section == 1:
+                desc_str = line
+                in_section = 2
+            elif in_section == 2:
+                val_str = line
+                in_section = 0
+
+            if line.startswith(header):
+                in_section = 1
+
+        desc_parts = desc_str.split('\t')
+        val_parts = val_str.split('\t')
+
+        if len(desc_parts) == 0 or len(val_parts) == 0:
+            raise ValueError("Error: Could not find lineage with header: " + header + ".  Invalid centrifuge summary file.")
+
+        if len(desc_parts) != len(val_parts):
+            raise ValueError("Error: Lineage with header: " + header + "; has different number of header and percentage columns.")
+
+        for i in range(len(desc_parts)):
+            h = desc_parts[i].strip()
+            print(h)
+            name, id, rank, rank_id = self.parse_taxon(h)
+            lineage_data[TaxRank[rank.upper()].name.lower()] = float(val_parts[i]) if i == 0 else (float(val_parts[i]) - float(val_parts[i - 1]))
+
+        return lineage_data
 
 
+    def extract_kingdom(self, f):
 
-            else:
-                if line.startswith("Expected Taxon:"):
-                    name, id, rank, rank_id = self.parse_taxon(line[16:].strip())
-                    table_data["expected_taxon"] = name + " (" + id + ")"
-                    table_data["expected_taxon_rank"] = rank
-                    table_data["expected_taxon_rank_id"] = rank_id
+        desc_str = ""
+        val_str = ""
+        in_section = 0
 
-                elif line.startswith("MRCA Taxon:"):
-                    name, id, rank, rank_id = self.parse_taxon(line[11:].strip())
-                    table_data["mrca_taxon"] = name + " (" + id + ")"
-                    table_data["mrca_taxon_rank"] = rank
-                    table_data["mrca_taxon_rank_id"] = rank_id
-                elif line.startswith("Expected Taxon's Lineage"):
-                    in_etl = 1
+        f['f'].seek(0)
 
-            i+=1
+        for l in f['f']:
+            line = l.strip()
 
-        k_head_parts = k_header.split('\t')
-        k_perc_parts = k_perc.split('\t')
+            if in_section == 1:
+                desc_str = line
+                in_section = 2
+            elif in_section == 2:
+                val_str = line
+                in_section = 0
+
+            if line.startswith("Kingdom Perc"):
+                in_section = 1
+
+        k_head_parts = desc_str.split('\t')
+        k_perc_parts = val_str.split('\t')
         kingdom_data = {}
 
         if len(k_head_parts) == 0 or len(k_perc_parts) == 0:
@@ -321,48 +363,9 @@ class MultiqcModule(BaseMultiqcModule):
             raise ValueError("Error: Kingdom percentages has different number of header and percentage columns.")
 
         for i in range(len(k_head_parts)):
-            h = k_head_parts[i]
-            name, id, rank, rank_id = self.parse_taxon(h.strip(), kingdom=True)
+            h = k_head_parts[i].strip()
+            print(h)
+            name, id, rank, rank_id = self.parse_taxon(h, kingdom=True)
             kingdom_data[name] = float(k_perc_parts[i])
 
-        ctl_head_parts = ctl_header.split('\t')
-        ctl_perc_parts = ctl_perc.split('\t')
-
-        if len(ctl_head_parts) == 0 or len(ctl_perc_parts) == 0:
-            raise ValueError("Error: Could not find classified taxon's lineage.  Invalid centrifuge summary file.")
-
-        if len(ctl_perc_parts) != len(ctl_head_parts):
-            raise ValueError("Error: Classified taxon's lineage has different number of header and percentage columns.")
-
-        for i in range(len(ctl_head_parts)):
-            h = ctl_head_parts[i]
-            name, id, rank, rank_id = self.parse_taxon(h.strip())
-            cls_lineage_data[TaxRank[rank.upper()].name.lower()] = float(ctl_perc_parts[i]) if i == 0 else (float(ctl_perc_parts[i]) - float(ctl_perc_parts[i-1]))
-
-        els_lineage_data = {}
-
-        if etl_header and etl_header != "":
-            etl_head_parts = etl_header.split('\t')
-            etl_perc_parts = etl_perc.split('\t')
-            if len(etl_head_parts) == 0 or len(etl_perc_parts) == 0:
-                raise ValueError("Error: Could not find expected taxon's lineage.  Invalid centrifuge summary file.")
-
-            if len(etl_perc_parts) != len(etl_head_parts):
-                raise ValueError(
-                    "Error: Expected taxon's lineage has different number of header and percentage columns.")
-
-            for i in range(len(etl_head_parts)):
-                h = etl_head_parts[i]
-                name, id, rank, rank_id = self.parse_taxon(h.strip())
-                els_lineage_data[TaxRank[rank.upper()].name.lower()] = float(etl_perc_parts[i]) if i == 0 else (float(etl_perc_parts[i]) - float(etl_perc_parts[i - 1]))
-        else:
-            for i in range(len(ctl_head_parts)):
-                h = ctl_head_parts[i]
-                name, id, rank, rank_id = self.parse_taxon(h.strip())
-                els_lineage_data[TaxRank[rank.upper()].name.lower()] = 100.0 if i == 8 else 0.0
-
-        #print(kingdom_data)
-
-        return table_data, cls_lineage_data, els_lineage_data, kingdom_data
-
-        
+        return kingdom_data
