@@ -116,6 +116,18 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         k_cats = OrderedDict()
+        k_cats['bacteria'] = {
+            'name': "Bacteria",
+            'color': 'orange'
+        }
+        k_cats['archaea'] = {
+            'name': "Archaea",
+            'color': 'black'
+        }
+        k_cats['viruses'] = {
+            'name': "Viruses",
+            'color': 'blue'
+        }
         k_cats['fungi'] = {
             'name': 'Fungi',
             'color': 'gray'
@@ -324,7 +336,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         for i in range(len(desc_parts)):
             h = desc_parts[i].strip()
-            print(h)
+            #print(h)
             name, id, rank, rank_id = self.parse_taxon(h)
             lineage_data[TaxRank[rank.upper()].name.lower()] = float(val_parts[i]) if i == 0 else (float(val_parts[i]) - float(val_parts[i - 1]))
 
@@ -364,7 +376,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         for i in range(len(k_head_parts)):
             h = k_head_parts[i].strip()
-            print(h)
+            #print(h)
             name, id, rank, rank_id = self.parse_taxon(h, kingdom=True)
             kingdom_data[name] = float(k_perc_parts[i])
 
