@@ -110,7 +110,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(
             name='Taxonomic classification',
             anchor='centrifuge-first',
-            description='Table showing classified taxon for each sample.  If expected taxon is  provided in samplesheet then this is also displayed, along with the most recent common ancestor of the classified and expected taxa.',
+            description='Table showing classified taxon for each sample.  The classfied taxon is typically the first category (starting from species level) to contain > 50% of total hits.  If sample has an expected taxon provided in samplesheet then this is also displayed, along with the most recent common ancestor of the classified and expected taxa.',
             helptext="Help?",
             plot=table.plot(self.table_data, headers, config)
         )
@@ -142,19 +142,17 @@ class MultiqcModule(BaseMultiqcModule):
         }
         k_config = {
             'id': 'kingdom',
-            'cpswitch': False,
+            'cpswitch': True,
             'cpswitch_c_active': False,
-            'title': 'Proportion of hits in each kingdom',
-            'ylab': "% hits",
-            'ymax': 100,
+            'title': 'Hits in each kingdom',
             'ymin': 0
 
         }
 
         self.add_section(
-            name='Kingdom percentages',
+            name='Kingdom classification',
             anchor='centrifuge-second',
-            description='Bar plot showing the proportion of hits in each kingdom.',
+            description='Bar plot showing hits falling into each Kingdom (or Super Kingdom).',
             helptext="Help?",
             plot=bargraph.plot(self.kingdom_data, k_cats, k_config)
         )
@@ -199,19 +197,17 @@ class MultiqcModule(BaseMultiqcModule):
         }
         lineage_config = {
             'id': 'cls_lineage',
-            'cpswitch': False,
+            'cpswitch': True,
             'cpswitch_c_active': False,
-            'title': 'Proportion of hits in rank for taxons lineage',
-            'ylab': "% hits",
-            'ymax': 100,
+            'title': 'Hits at each rank in taxons lineage',
             'ymin': 0
 
         }
 
         self.add_section(
-            name='Rank percentages',
+            name='Rank hits',
             anchor='centrifuge-third',
-            description='Bar plot showing the percentage of hits occuring at each level.',
+            description='Bar plot showing the rank at which centrifuge hits were classified.',
             helptext="Help?",
             plot=bargraph.plot(self.rank_data, cats, lineage_config)
         )
@@ -219,7 +215,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(
             name='Classified taxons lineage',
             anchor='centrifuge-fourth',
-            description='Bar plot showing the classified taxons lineage (largest taxa at each taxonomic rank).',
+            description='Bar plot showing the classified taxons lineage (largest taxa at each taxonomic rank incorperating the classified taxon).',
             helptext="Help?",
             plot=bargraph.plot(self.cls_lineage_data, cats, lineage_config)
         )
@@ -227,7 +223,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(
             name='Expected taxons lineage',
             anchor='centrifuge-fifth',
-            description='Bar plot showing the expected taxons lineage (largest taxa at each taxonomic rank).',
+            description='Bar plot showing the expected taxons lineage (largest taxa at each taxonomic rank incoperating the expected taxon).',
             helptext="Help?",
             plot=bargraph.plot(self.els_lineage_data, cats, lineage_config)
         )
@@ -306,7 +302,8 @@ class MultiqcModule(BaseMultiqcModule):
     def extract_lineage(self, f, header):
 
         desc_str = ""
-        val_str = ""
+        perc_str = ""
+        count_str = ""
         in_section = 0
         lineage_data = {}
 
@@ -319,26 +316,30 @@ class MultiqcModule(BaseMultiqcModule):
                 desc_str = line
                 in_section = 2
             elif in_section == 2:
-                val_str = line
+                perc_str = line
+                in_section = 3
+            elif in_section == 3:
+                count_str = line
                 in_section = 0
 
             if line.startswith(header):
                 in_section = 1
 
         desc_parts = desc_str.split('\t')
-        val_parts = val_str.split('\t')
+        perc_parts = perc_str.split('\t')
+        count_parts = count_str.split('\t')
 
-        if len(desc_parts) == 0 or len(val_parts) == 0:
+        if len(desc_parts) == 0 or len(perc_parts) == 0 or len(count_parts) == 0:
             raise ValueError("Error: Could not find lineage with header: " + header + ".  Invalid centrifuge summary file.")
 
-        if len(desc_parts) != len(val_parts):
-            raise ValueError("Error: Lineage with header: " + header + "; has different number of header and percentage columns.")
+        if len(desc_parts) != len(perc_parts) or len(desc_parts) != len(count_parts):
+            raise ValueError("Error: Lineage with header: " + header + "; has different number of header and value columns.")
 
         for i in range(len(desc_parts)):
             h = desc_parts[i].strip()
             #print(h)
             name, id, rank, rank_id = self.parse_taxon(h)
-            lineage_data[TaxRank[rank.upper()].name.lower()] = float(val_parts[i]) if i == 0 else (float(val_parts[i]) - float(val_parts[i - 1]))
+            lineage_data[TaxRank[rank.upper()].name.lower()] = int(count_parts[i]) if i == 0 else (int(count_parts[i]) - int(count_parts[i - 1]))
 
         return lineage_data
 
@@ -346,7 +347,8 @@ class MultiqcModule(BaseMultiqcModule):
     def extract_kingdom(self, f):
 
         desc_str = ""
-        val_str = ""
+        perc_str = ""
+        count_str = ""
         in_section = 0
 
         f['f'].seek(0)
@@ -358,26 +360,30 @@ class MultiqcModule(BaseMultiqcModule):
                 desc_str = line
                 in_section = 2
             elif in_section == 2:
-                val_str = line
+                perc_str = line
+                in_section = 3
+            elif in_section == 3:
+                count_str = line
                 in_section = 0
 
             if line.startswith("Kingdom Perc"):
                 in_section = 1
 
-        k_head_parts = desc_str.split('\t')
-        k_perc_parts = val_str.split('\t')
+        desc_parts = desc_str.split('\t')
+        perc_parts = perc_str.split('\t')
+        count_parts = count_str.split('\t')
         kingdom_data = {}
 
-        if len(k_head_parts) == 0 or len(k_perc_parts) == 0:
+        if len(desc_parts) == 0 or len(perc_parts) == 0 or len(count_parts) == 0:
             raise ValueError("Error: Could not find kingdom percentages.  Invalid centrifuge summary file.")
 
-        if len(k_perc_parts) != len(k_head_parts):
+        if len(perc_parts) != len(desc_parts) or len(desc_parts) != len(count_parts):
             raise ValueError("Error: Kingdom percentages has different number of header and percentage columns.")
 
-        for i in range(len(k_head_parts)):
-            h = k_head_parts[i].strip()
+        for i in range(len(desc_parts)):
+            h = desc_parts[i].strip()
             #print(h)
             name, id, rank, rank_id = self.parse_taxon(h, kingdom=True)
-            kingdom_data[name] = float(k_perc_parts[i])
+            kingdom_data[name] = int(count_parts[i])
 
         return kingdom_data
