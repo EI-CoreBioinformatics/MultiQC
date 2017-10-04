@@ -1,3 +1,4 @@
+from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import table, bargraph
 from enum import Enum, unique
@@ -41,9 +42,16 @@ class MultiqcModule(BaseMultiqcModule):
         self.kingdom_data = {}
         self.rank_data={}
         self.top5_data = {}
-        for f in self.find_log_files('centrifuge', filehandles=True):
-            s_name = self.clean_s_name(f['s_name'][:-11], f['root'])
-            self.table_data[s_name], self.cls_lineage_data[s_name], self.els_lineage_data[s_name], self.kingdom_data[s_name], self.rank_data[s_name], self.top5_data[s_name] = self.parse_cf_reports(f)
+
+        for fname in self.find_log_files('centrifuge', filehandles=True):
+            s_name = self.clean_s_name(fname['s_name'][:-11], fname['root'])
+
+            with open(fname) as f:
+                content = f.readlines()
+            # you may also want to remove whitespace characters like `\n` at the end of each line
+            content = [x.strip() for x in content]
+
+            self.table_data[s_name], self.cls_lineage_data[s_name], self.els_lineage_data[s_name], self.kingdom_data[s_name], self.rank_data[s_name], self.top5_data[s_name] = self.parse_cf_reports(content)
             self.add_data_source(f, s_name)
 
         self.table_data = self.ignore_samples(self.table_data)
@@ -113,7 +121,7 @@ class MultiqcModule(BaseMultiqcModule):
             'max': 8,
             'format': '{:,.0f}'
         }
-        config = {
+        tc_config = {
             'namespace': 'Centrifuge',
             'scale': 'RdYlGn',
             'save_file': True,
@@ -125,7 +133,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor='centrifuge-first',
             description='Table showing classified taxon for each sample.  The classfied taxon is typically the first category (starting from species level) to contain > 50% of total hits.  If sample has an expected taxon provided in samplesheet then this is also displayed, along with the most recent common ancestor of the classified and expected taxa.',
             helptext="Help?",
-            plot=table.plot(self.table_data, headers, config)
+            plot=table.plot(self.table_data, headers, tc_config)
         )
 
 
@@ -336,14 +344,13 @@ class MultiqcModule(BaseMultiqcModule):
 
 
 
-    def parse_cf_reports(self, f):
+    def parse_cf_reports(self, content):
 
         table_data = {}
 
         exp_present = False
 
-        for l in f['f']:
-            line = l.strip()
+        for line in content:
 
             if line.startswith("Classified Taxon:"):
                 name, id, rank, rank_id = self.parse_taxon(line[18:].strip())
@@ -365,14 +372,14 @@ class MultiqcModule(BaseMultiqcModule):
             elif line.startswith("Total hits"):
                 table_data["total_hits"] = int(line.split(':')[1].strip())
 
-        cls_lineage_data = self.extract_lineage(f, "Classified Taxon's Lineage")
-        kingdom_data = self.extract_kingdom(f)
-        rank_data = self.extract_lineage(f, "Rank Perc")
-        t5_data = self.extract_t5(f, "Top 5 ")
+        cls_lineage_data = self.extract_lineage(content, "Classified Taxon's Lineage")
+        kingdom_data = self.extract_kingdom(content)
+        rank_data = self.extract_lineage(content, "Rank Perc")
+        t5_data = self.extract_t5(content, "Top 5 ")
 
         els_lineage_data = {}
         if exp_present:
-            els_lineage_data = self.extract_lineage(f, "Expected Taxon's Lineage")
+            els_lineage_data = self.extract_lineage(content, "Expected Taxon's Lineage")
         else:
             for i, r in enumerate(TaxRank):
                 els_lineage_data[r.name.lower()] = 100.0 if i == 0 else 0.0
@@ -381,7 +388,7 @@ class MultiqcModule(BaseMultiqcModule):
 
 
 
-    def extract_t5(self, f, header):
+    def extract_t5(self, content, header):
 
         desc_str = ""
         perc_str = ""
@@ -389,9 +396,7 @@ class MultiqcModule(BaseMultiqcModule):
         in_section = 0
         t5_data = {}
 
-        f['f'].seek(0)
-
-        for l in f['f']:
+        for l in content:
             line = l.strip()
 
             if in_section == 1:
@@ -427,7 +432,7 @@ class MultiqcModule(BaseMultiqcModule):
         return t5_data
 
 
-    def extract_lineage(self, f, header):
+    def extract_lineage(self, content, header):
 
         desc_str = ""
         perc_str = ""
@@ -435,9 +440,7 @@ class MultiqcModule(BaseMultiqcModule):
         in_section = 0
         lineage_data = {}
 
-        f['f'].seek(0)
-
-        for l in f['f']:
+        for l in content:
             line = l.strip()
 
             if in_section == 1:
@@ -472,16 +475,14 @@ class MultiqcModule(BaseMultiqcModule):
         return lineage_data
 
 
-    def extract_kingdom(self, f):
+    def extract_kingdom(self, content):
 
         desc_str = ""
         perc_str = ""
         count_str = ""
         in_section = 0
 
-        f['f'].seek(0)
-
-        for l in f['f']:
+        for l in content:
             line = l.strip()
 
             if in_section == 1:
