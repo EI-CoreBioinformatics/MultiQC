@@ -18,6 +18,16 @@ class TaxRank(Enum):
 	GENUS = 7
 	SPECIES = 8
 
+
+mapping = {
+    '0': 'first',
+    '1': 'second',
+    '2': 'third',
+    '3': 'fourth',
+    '4': 'fifth'
+}
+
+
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
         # Initialise the parent object
@@ -30,15 +40,18 @@ class MultiqcModule(BaseMultiqcModule):
         self.els_lineage_data = {}
         self.kingdom_data = {}
         self.rank_data={}
+        self.top5_data = {}
         for f in self.find_log_files('centrifuge', filehandles=True):
             s_name = self.clean_s_name(f['s_name'][:-11], f['root'])
-            self.table_data[s_name], self.cls_lineage_data[s_name], self.els_lineage_data[s_name], self.kingdom_data[s_name], self.rank_data[s_name] = self.parse_cf_reports(f)
+            self.table_data[s_name], self.cls_lineage_data[s_name], self.els_lineage_data[s_name], self.kingdom_data[s_name], self.rank_data[s_name], self.top5_data[s_name] = self.parse_cf_reports(f)
             self.add_data_source(f, s_name)
 
         self.table_data = self.ignore_samples(self.table_data)
         self.cls_lineage_data = self.ignore_samples(self.cls_lineage_data)
         self.els_lineage_data = self.ignore_samples(self.els_lineage_data)
         self.kingdom_data = self.ignore_samples(self.kingdom_data)
+        self.rank_data = self.ignore_samples(self.rank_data)
+        self.top5_data = self.ignore_samples(self.top5_data)
 
         if len(self.table_data) == 0:
             log.debug("Could not find any data in {}".format(config.analysis_dir))
@@ -115,6 +128,73 @@ class MultiqcModule(BaseMultiqcModule):
             plot=table.plot(self.table_data, headers, config)
         )
 
+
+        t5_headers = OrderedDict()
+        t5_headers['first_name'] = {
+            'title': "First"
+        }
+        t5_headers['first_count'] = {
+            'title': "Hits %",
+            'scale': 'RdYlGn',
+            'min': 0,
+            'max': 100.0,
+            'format': '{:,.1f}'
+        }
+
+        t5_headers['second_name'] = {
+            'title': "Second"
+        }
+        t5_headers['second_count'] = {
+            'title': "Hits %",
+            'scale': 'RdYlGn',
+            'min': 0,
+            'max': 100.0,
+            'format': '{:,.1f}'
+        }
+        t5_headers['third_name'] = {
+            'title': "Third"
+        }
+        t5_headers['third_count'] = {
+            'title': "Hits %",
+            'scale': 'RdYlGn',
+            'min': 0,
+            'max': 100.0,
+            'format': '{:,.1f}'
+        }
+        t5_headers['fourth_name'] = {
+            'title': "Fourth"
+        }
+        t5_headers['fourth_count'] = {
+            'title': "Hits %",
+            'scale': 'RdYlGn',
+            'min': 0,
+            'max': 100.0,
+            'format': '{:,.1f}'
+        }
+        t5_headers['fifth_name'] = {
+            'title': "Fifth"
+        }
+        t5_headers['fifth_count'] = {
+            'title': "Hits %",
+            'scale': 'RdYlGn',
+            'min': 0.0,
+            'max': 100.0,
+            'format': '{:,.1f}'
+        }
+        t5_config = {
+            'namespace': 'Centrifuge',
+            'scale': 'RdYlGn',
+            'save_file': True,
+            'raw_data_fn': 'multiqc_centrifuge_top5'
+        }
+        self.add_section(
+            name='Top 5 Species',
+            anchor='centrifuge-second',
+            description='Table showing the top 5 largest species for each sample..',
+            helptext="Help?",
+            plot=table.plot(self.top5_data, t5_headers, t5_config)
+        )
+
         k_cats = OrderedDict()
         k_cats['bacteria'] = {
             'name': "Bacteria",
@@ -151,7 +231,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.add_section(
             name='Kingdom classification',
-            anchor='centrifuge-second',
+            anchor='centrifuge-third',
             description='Bar plot showing hits falling into each Kingdom (or Super Kingdom).',
             helptext="Help?",
             plot=bargraph.plot(self.kingdom_data, k_cats, k_config)
@@ -206,7 +286,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.add_section(
             name='Rank hits',
-            anchor='centrifuge-third',
+            anchor='centrifuge-fourth',
             description='Bar plot showing the rank at which centrifuge hits were classified.',
             helptext="Help?",
             plot=bargraph.plot(self.rank_data, cats, lineage_config)
@@ -214,7 +294,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.add_section(
             name='Classified taxons lineage',
-            anchor='centrifuge-fourth',
+            anchor='centrifuge-fifth',
             description='Bar plot showing the classified taxons lineage (largest taxa at each taxonomic rank incorperating the classified taxon).',
             helptext="Help?",
             plot=bargraph.plot(self.cls_lineage_data, cats, lineage_config)
@@ -222,7 +302,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.add_section(
             name='Expected taxons lineage',
-            anchor='centrifuge-fifth',
+            anchor='centrifuge-sixth',
             description='Bar plot showing the expected taxons lineage (largest taxa at each taxonomic rank incoperating the expected taxon).',
             helptext="Help?",
             plot=bargraph.plot(self.els_lineage_data, cats, lineage_config)
@@ -233,16 +313,17 @@ class MultiqcModule(BaseMultiqcModule):
 
         #self.write_data_file(self.cf_data, 'multiqc_centrifuge')
 
-    def parse_taxon(self, taxon_str, kingdom=False):
+    def parse_taxon(self, taxon_str, rank=None):
 
         parts = taxon_str.strip().split('(')
         name = parts[0][:-1].strip().lower()
+        name = name[0].capitalize() + name[1:]
 
-        if kingdom:
+        if rank:
             id = parts[1][3:-1]
-            rank = "kingdom"
-            rank_id = TaxRank.KINGDOM.value
-            return name, id, rank, rank_id
+            rank_name = rank.name.lower()
+            rank_id = rank.value
+            return name, id, rank_name, rank_id
         else:
             parts2 = parts[1].split(';')
             id_part = parts2[0]
@@ -287,6 +368,7 @@ class MultiqcModule(BaseMultiqcModule):
         cls_lineage_data = self.extract_lineage(f, "Classified Taxon's Lineage")
         kingdom_data = self.extract_kingdom(f)
         rank_data = self.extract_lineage(f, "Rank Perc")
+        t5_data = self.extract_t5(f, "Top 5 ")
 
         els_lineage_data = {}
         if exp_present:
@@ -295,9 +377,55 @@ class MultiqcModule(BaseMultiqcModule):
             for i, r in enumerate(TaxRank):
                 els_lineage_data[r.name.lower()] = 100.0 if i == 0 else 0.0
 
-        return table_data, cls_lineage_data, els_lineage_data, kingdom_data, rank_data
+        return table_data, cls_lineage_data, els_lineage_data, kingdom_data, rank_data, t5_data
 
-        
+
+
+    def extract_t5(self, f, header):
+
+        desc_str = ""
+        perc_str = ""
+        count_str = ""
+        in_section = 0
+        t5_data = {}
+
+        f['f'].seek(0)
+
+        for l in f['f']:
+            line = l.strip()
+
+            if in_section == 1:
+                desc_str = line
+                in_section = 2
+            elif in_section == 2:
+                perc_str = line
+                in_section = 3
+            elif in_section == 3:
+                count_str = line
+                in_section = 0
+
+            if line.startswith(header):
+                in_section = 1
+
+        desc_parts = desc_str.split('\t')
+        perc_parts = perc_str.split('\t')
+        count_parts = count_str.split('\t')
+
+        if len(desc_parts) == 0 or len(perc_parts) == 0 or len(count_parts) == 0:
+            raise ValueError("Error: Could not find lineage with header: " + header + ".  Invalid centrifuge summary file.")
+
+        if len(desc_parts) != len(perc_parts) or len(desc_parts) != len(count_parts) or len(desc_parts) != 5:
+            raise ValueError("Error: Lineage with header: " + header + "; has different number of header and value columns.")
+
+        for i in range(len(desc_parts)):
+            h = desc_parts[i].strip()
+            #print(h)
+            name, id, rank, rank_id = self.parse_taxon(h, rank=TaxRank.SPECIES)
+            t5_data[mapping[str(i)] + "_name"] = h
+            t5_data[mapping[str(i)] + "_count"] = float(perc_parts[i])
+
+        return t5_data
+
 
     def extract_lineage(self, f, header):
 
@@ -383,7 +511,7 @@ class MultiqcModule(BaseMultiqcModule):
         for i in range(len(desc_parts)):
             h = desc_parts[i].strip()
             #print(h)
-            name, id, rank, rank_id = self.parse_taxon(h, kingdom=True)
+            name, id, rank, rank_id = self.parse_taxon(h, rank=TaxRank.KINGDOM)
             kingdom_data[name] = int(count_parts[i])
 
         return kingdom_data
