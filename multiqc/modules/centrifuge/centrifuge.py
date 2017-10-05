@@ -43,16 +43,13 @@ class MultiqcModule(BaseMultiqcModule):
         self.rank_data={}
         self.top5_data = {}
 
-        for fname in self.find_log_files('centrifuge', filehandles=True):
-            s_name = self.clean_s_name(fname['s_name'][:-11], fname['root'])
+        for c_file in self.find_log_files('centrifuge'):
+            s_name = self.clean_s_name(c_file['s_name'][:-11], c_file['root'])
 
-            with open(fname) as f:
-                content = f.readlines()
-            # you may also want to remove whitespace characters like `\n` at the end of each line
-            content = [x.strip() for x in content]
+            content = c_file['f'].splitlines()
 
             self.table_data[s_name], self.cls_lineage_data[s_name], self.els_lineage_data[s_name], self.kingdom_data[s_name], self.rank_data[s_name], self.top5_data[s_name] = self.parse_cf_reports(content)
-            self.add_data_source(f, s_name)
+            self.add_data_source(c_file, s_name)
 
         self.table_data = self.ignore_samples(self.table_data)
         self.cls_lineage_data = self.ignore_samples(self.cls_lineage_data)
@@ -513,6 +510,6 @@ class MultiqcModule(BaseMultiqcModule):
             h = desc_parts[i].strip()
             #print(h)
             name, id, rank, rank_id = self.parse_taxon(h, rank=TaxRank.KINGDOM)
-            kingdom_data[name] = int(count_parts[i])
+            kingdom_data[name.lower()] = int(count_parts[i])
 
         return kingdom_data
