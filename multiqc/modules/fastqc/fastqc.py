@@ -297,12 +297,15 @@ class MultiqcModule(BaseMultiqcModule):
             'hidden': True
         }
         headers['total_sequences'] = {
-            'title': '{} Seqs'.format(config.read_count_prefix),
-            'description': 'Total Sequences ({})'.format(config.read_count_desc),
+            #'title': '{} Seqs'.format(config.read_count_prefix),
+            'title': '# Seqs',
+            #'description': 'Total Sequences ({})'.format(config.read_count_desc),
+            'description': 'Total Sequences',
             'min': 0,
             'scale': 'Blues',
-            'modify': lambda x: x * config.read_count_multiplier,
-            'shared_key': 'read_count'
+            #'modify': lambda x: x * config.read_count_multiplier,
+            'shared_key': 'read_count',
+            'format': '{:,.0f}',
         }
         self.general_stats_addcols(data, headers)
 
