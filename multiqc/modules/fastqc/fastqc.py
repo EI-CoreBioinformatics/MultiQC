@@ -176,7 +176,41 @@ class MultiqcModule(BaseMultiqcModule):
                             self.dup_keys.append(s[0])
 
         # Tidy up the Basic Stats
-        self.fastqc_data[s_name]['basic_statistics'] = {d['measure']: d['value'] for d in self.fastqc_data[s_name]['basic_statistics']}
+        self.fastqc_data[s_name]['basic_statistics'] = {d['measure']: d['value'] for d in
+                                                        self.fastqc_data[s_name][
+                                                            'basic_statistics']}
+
+        # Pull out upto Q30
+        pbsq_unordered_list = []
+        for pbsq in self.fastqc_data[s_name]["per_base_sequence_quality"]:
+
+            pos = str(pbsq['base'])
+
+            # The base is only a single number up until 10.  After this the base is represented by a range.
+            # In these cases we take the upper value in the range.
+            base = int(pos.split('-')[1]) if '-' in pos else int(float(pos))
+
+            # Mean quality at this base
+            mean = float(pbsq['mean'])
+
+            pbsq_unordered_list.append((base, mean))
+
+        pbsq_ordered_list = sorted(pbsq_unordered_list, key=lambda x: x[0])
+
+        print(pbsq_ordered_list)
+
+        q30_reaches = 0
+        for i, pbsq in enumerate(pbsq_ordered_list):
+            if i == 0:
+                continue
+
+            if float(pbsq[1]) > 30.0:
+                q30_reaches = pbsq[0]
+
+        print(q30_reaches)
+        self.fastqc_data[s_name]['basic_statistics']['upto_q30'] = q30_reaches
+
+
 
         # Calculate the average sequence length (Basic Statistics gives a range)
         length_bp = 0
@@ -196,6 +230,7 @@ class MultiqcModule(BaseMultiqcModule):
         for s_name in self.fastqc_data:
             bs = self.fastqc_data[s_name]['basic_statistics']
             data[s_name] = {
+                'upto_q30': bs['upto_q30'],
                 'percent_gc': bs['%GC'],
                 'avg_sequence_length': bs['avg_sequence_length'],
                 'total_sequences': bs['Total Sequences'],
@@ -225,6 +260,13 @@ class MultiqcModule(BaseMultiqcModule):
             'min': 0,
             'suffix': '%',
             'scale': 'RdYlGn-rev'
+        }
+        headers['upto_q30'] = {
+            'title': 'Up to Q30',
+            'description': 'First mean base to drop below Q30 (ignoring first base)',
+            'min': 0,
+            'scale': 'RdYlGn',
+            'format': '{:,.0f}'
         }
         headers['percent_gc'] = {
             'title': '% GC',
