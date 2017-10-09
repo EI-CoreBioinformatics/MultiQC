@@ -40,6 +40,7 @@ busco:
     fn: 'short_summary_*'
 centrifuge:
     fn: '*_centrifuge.summary'
+    max_filesize: 5000
 custom_content:
     fn_re: '.+_mqc\.(yaml|yml|json|txt|csv|tsv|log|out)'
 clusterflow/logs:
