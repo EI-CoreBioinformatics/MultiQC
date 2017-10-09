@@ -197,7 +197,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         pbsq_ordered_list = sorted(pbsq_unordered_list, key=lambda x: x[0])
 
-        print(pbsq_ordered_list)
+        #print(pbsq_ordered_list)
 
         q30_reaches = 0
         for i, pbsq in enumerate(pbsq_ordered_list):
@@ -207,7 +207,7 @@ class MultiqcModule(BaseMultiqcModule):
             if float(pbsq[1]) > 30.0:
                 q30_reaches = pbsq[0]
 
-        print(q30_reaches)
+        #print(q30_reaches)
         self.fastqc_data[s_name]['basic_statistics']['upto_q30'] = q30_reaches
 
 
