@@ -130,63 +130,80 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(
             name='Taxonomic classification',
             anchor='centrifuge-first',
-            description='Table showing classified taxon for each sample.  The classfied taxon is typically the first category (starting from species level) to contain > 50% of total hits.  If sample has an expected taxon provided in samplesheet then this is also displayed, along with the most recent common ancestor of the classified and expected taxa.',
-            helptext="Help?",
+            description='Table showing classified taxon for each sample.  The classfied taxon is typically the first category '
+                        '(starting from species level) to contain > 50% of total hits.  If sample has an expected taxon provided '
+                        'in samplesheet then this is also displayed, along with the most recent common ancestor of the classified and expected taxa.',
+            helptext="This table is intended to give a quick view of what makes up the majority of the sample, and if an expected taxon id was specified,"
+                     "whether that matches up with what was detected.",
             plot=table.plot(self.table_data, headers, tc_config)
         )
 
 
         t5_headers = OrderedDict()
         t5_headers['first_name'] = {
-            'title': "First"
+            'title': "First",
+            'format': '{:50}'
         }
         t5_headers['first_count'] = {
             'title': "Hits %",
             'scale': 'RdYlGn',
             'min': 0,
             'max': 100.0,
-            'format': '{:,.1f}'
+            'format': '{:,.1f}',
+            'custom_style': 'width=5%'
         }
 
         t5_headers['second_name'] = {
-            'title': "Second"
+            'title': "Second",
+            'format': '{:50}'
         }
         t5_headers['second_count'] = {
             'title': "Hits %",
             'scale': 'RdYlGn',
             'min': 0,
             'max': 100.0,
-            'format': '{:,.1f}'
+            'format': '{:,.1f}',
+            'custom_style': 'width=5%'
         }
         t5_headers['third_name'] = {
-            'title': "Third"
+            'title': "Third",
+            'format': '{:50}'
         }
         t5_headers['third_count'] = {
             'title': "Hits %",
             'scale': 'RdYlGn',
             'min': 0,
             'max': 100.0,
-            'format': '{:,.1f}'
+            'format': '{:,.1f}',
+            'custom_style': 'width=5%'
         }
         t5_headers['fourth_name'] = {
-            'title': "Fourth"
+            'title': "Fourth",
+            'format': '{:50}',
+            'hidden': True
         }
         t5_headers['fourth_count'] = {
             'title': "Hits %",
             'scale': 'RdYlGn',
             'min': 0,
             'max': 100.0,
-            'format': '{:,.1f}'
+            'format': '{:,.1f}',
+            'custom_style': 'width=5%',
+            'hidden': True
         }
         t5_headers['fifth_name'] = {
-            'title': "Fifth"
+            'title': "Fifth",
+            'format': '{:50}',
+            'hidden': True
         }
         t5_headers['fifth_count'] = {
             'title': "Hits %",
             'scale': 'RdYlGn',
             'min': 0.0,
             'max': 100.0,
-            'format': '{:,.1f}'
+            'format': '{:,.1f}',
+            'custom_style': 'width=5%',
+            'hidden': True
         }
         t5_config = {
             'namespace': 'Centrifuge',
@@ -195,17 +212,19 @@ class MultiqcModule(BaseMultiqcModule):
             'raw_data_fn': 'multiqc_centrifuge_top5'
         }
         self.add_section(
-            name='Top 5 Species',
+            name='Top Species',
             anchor='centrifuge-second',
-            description='Table showing the top 5 largest species for each sample..',
-            helptext="Help?",
+            description='This table shows the most abundant species for each sample. Top 3 shown by default although up to top 5 available through configure columns button.',
+            helptext="The intention of this table is to show a low-level view of what is present in each sample.",
             plot=table.plot(self.top5_species_data, t5_headers, t5_config)
         )
         self.add_section(
-            name='Top 5 Class',
+            name='Top Classes',
             anchor='centrifuge-third',
-            description='Table showing the top 5 largest classes for each sample..',
-            helptext="Help?",
+            description='This table shows the most abundant taxonomic classes for each sample. Top 3 shown by default although up to top 5 available through configure columns button.',
+            helptext='Occasionally, groupings from lower ranks, such as "Order" or "Family" may be promoted to class level '
+                     'and registered here if most abundant species has no defined class in it\'s taxonomic lineage.'
+                     'The intention of this table is to give a mid-level taxonomic view of what is present in the sample',
             plot=table.plot(self.top5_class_data, t5_headers, t5_config)
         )
 
@@ -247,7 +266,9 @@ class MultiqcModule(BaseMultiqcModule):
             name='Kingdom classification',
             anchor='centrifuge-fourth',
             description='Bar plot showing hits falling into each Kingdom (or Super Kingdom).',
-            helptext="Help?",
+            helptext="Strictly speaking this plot does not necessarily contain all Kingdom-level taxonomic groupings, "
+                     "also it contains some groupings at super kingdom level.  The definitely list shown here is: 'Bacteria', 'Archaea', 'Viruses', 'Fungi', 'Viridiplantae' and 'Metazoa'."
+                     "Anything else is not shown.  The intention is to give a high-level view of what is in the sample.",
             plot=bargraph.plot(self.kingdom_data, k_cats, k_config)
         )
 
@@ -302,7 +323,9 @@ class MultiqcModule(BaseMultiqcModule):
             name='Rank hits',
             anchor='centrifuge-fifth',
             description='Bar plot showing the rank at which centrifuge hits were classified.',
-            helptext="Help?",
+            helptext="Most of the time we should expect most hits to occur at the species level, hence the plot should look"
+                     "mostly green.  However, on occasion centrifuge may create hits at higher taxonomic level if there is"
+                     "a high level of ambiguity in the alignments.  If that's the case here then it warrents further investigation.",
             plot=bargraph.plot(self.rank_data, cats, lineage_config)
         )
 
@@ -310,7 +333,13 @@ class MultiqcModule(BaseMultiqcModule):
             name='Classified taxons lineage',
             anchor='centrifuge-sixth',
             description='Bar plot showing the classified taxons lineage (largest taxa at each taxonomic rank incorperating the classified taxon).',
-            helptext="Help?",
+            helptext="This plot is showing the proportions of hits that occur along a taxonomic lineage that includes the"
+                     "classified taxon id.  If this id is above species level then we take the largest taxa at each level"
+                     "down to species.  If the sequenceing was of a particular organism that is well captured in the database (typically NCBI NT, unless otherwise directed),"
+                     "then we would expect the classified taxon id to be at species level and the species (green) proportion of this"
+                     "plot to by greater than 50%.  If this was a metagenomic sample, or a non-model organism was sequenced, or"
+                     "if the sample has heavy contamination, then we might expect the middle to upper ranks to contain larger"
+                     "proportions of the bar graph.",
             plot=bargraph.plot(self.cls_lineage_data, cats, lineage_config)
         )
 
@@ -318,7 +347,9 @@ class MultiqcModule(BaseMultiqcModule):
             name='Expected taxons lineage',
             anchor='centrifuge-seventh',
             description='Bar plot showing the expected taxons lineage (largest taxa at each taxonomic rank incoperating the expected taxon).',
-            helptext="Help?",
+            helptext="See help for classified taxon's lineage for more details but to summarise this shows the lineage containing"
+                     "the expected taxa if present.  If it wasn't provided then this plot will be all gray.  If the expected"
+                     "taxa was a close match to the classfied taxa this should look very similar to the bar chart above.",
             plot=bargraph.plot(self.els_lineage_data, cats, lineage_config)
         )
         

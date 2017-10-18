@@ -95,7 +95,7 @@ def make_table (dt):
         t_modal_headers[rid] = """
         <tr class="{rid}{muted}" style="background-color: rgba({col}, 0.15);">
           <td class="sorthandle ui-sortable-handle">||</span></td>
-          <td style="text-align:center;">
+          <td style="text-align:center;{custom_style}">
             <input class="mqc_table_col_visible" type="checkbox" {checked} value="{rid}" data-target="#{tid}">
           </td>
           <td>{name}</td>
@@ -113,7 +113,8 @@ def make_table (dt):
                 title = header['title'],
                 desc = header['description'],
                 col_id = '<code>{}</code>'.format(k),
-                sk = header.get('shared_key', '')
+                sk = header.get('shared_key', ''),
+                custom_style = header['custom_style'] if 'custom_style' in header else ''
             )
 
         # Make a colour scale
@@ -178,7 +179,7 @@ def make_table (dt):
 
                     if s_name not in t_rows:
                         t_rows[s_name] = dict()
-                    t_rows[s_name][rid] = '<td class="data-coloured {rid} {h}">{c}</td>'.format(rid=rid, h=hide, c=wrapper_html)
+                    t_rows[s_name][rid] = '<td class="data-coloured {rid} {h} {s}">{c}</td>'.format(rid=rid, h=hide, c=wrapper_html, s=("style=\"" + header['custom_style'] + "\"") if 'custom_style' in header else '')
 
         # Remove header if we don't have any filled cells for it
         if sum([len(rows) for rows in t_rows.values()]) == 0:
