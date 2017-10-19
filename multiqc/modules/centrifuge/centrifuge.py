@@ -70,55 +70,62 @@ class MultiqcModule(BaseMultiqcModule):
         headers["total_hits"] = {
             'title': 'Total Hits',
             'description': "Total hits to DB",
-            'format': '{:,.0f}'
+            'format': '{:,.0f}',
+            'custom_style': 'width=10%'
         }
         headers["actual_taxon"] = {
             'title': 'Classified Taxon',
             'description': "Classified taxon"
         }
         headers["actual_taxon_rank"] = {
-            'title': 'Cls Rank',
+            'title': 'Rank',
             'description': "Classified taxon's rank",
+            'custom_style': 'width=6%'
         }
         headers["actual_taxon_rank_id"] = {
-            'title': 'Cls Rank Level',
-            'description': "Classified taxon's rank level",
+            'title': 'Level',
+            'description': "Classified taxon's rank level (0=Root -> 8=Species)",
             'scale': 'RdYlGn',
             'min': 0,
             'max': 8,
-            'format': '{:,.0f}'
+            'format': '{:,.0f}',
+            'custom_style': 'width=3%'
         }
         headers["expected_taxon"] = {
             'title': 'Expected Taxon',
             'description': "Expected taxon"
         }
         headers["expected_taxon_rank"] = {
-            'title': 'Exp Rank',
-            'description': "Expected taxon's rank"
+            'title': 'Rank',
+            'description': "Expected taxon's rank",
+            'custom_style': 'width=6%'
         }
         headers["expected_taxon_rank_id"] = {
-            'title': 'Exp Rank Level',
-            'description': "Expected taxon's rank level",
+            'title': 'Level',
+            'description': "Expected taxon's rank level (0=Root -> 8=Species)",
             'scale': 'RdYlGn',
             'min': 0,
             'max': 8,
-            'format': '{:,.0f}'
+            'format': '{:,.0f}',
+            'custom_style': 'width=3%'
         }
         headers["mrca_taxon"] = {
             'title': 'MRCA Taxon',
             'description': "Most recent common ancestor taxon"
         }
         headers["mrca_taxon_rank"] = {
-            'title': 'MRCA Rank',
-            'description': "Most recent common ancestor taxon's rank"
+            'title': 'Rank',
+            'description': "Most recent common ancestor taxon's rank",
+            'custom_style': 'width=6%'
         }
         headers["mrca_taxon_rank_id"] = {
-            'title': 'MRCA Rank Level',
-            'description': "Most recent common ancestor taxon's rank level",
+            'title': 'Level',
+            'description': "Most recent common ancestor taxon's rank level (0=Root -> 8=Species)",
             'scale': 'RdYlGn',
             'min': 0,
             'max': 8,
-            'format': '{:,.0f}'
+            'format': '{:,.0f}',
+            'custom_style': 'width=3%'
         }
         tc_config = {
             'namespace': 'Centrifuge',
@@ -141,11 +148,13 @@ class MultiqcModule(BaseMultiqcModule):
 
         t5_headers = OrderedDict()
         t5_headers['first_name'] = {
-            'title': "First",
+            'title': "1st Name",
+            'description': "Taxonomic name and id at 1st position",
             'format': '{:50}'
         }
         t5_headers['first_count'] = {
-            'title': "Hits %",
+            'title': "1st %",
+            'description': "Percentage of centrifuge hits allocated to 1st position",
             'scale': 'RdYlGn',
             'min': 0,
             'max': 100.0,
@@ -154,11 +163,13 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         t5_headers['second_name'] = {
-            'title': "Second",
+            'title': "2nd Name",
+            'description': "Taxonomic name and id at 2nd position",
             'format': '{:50}'
         }
         t5_headers['second_count'] = {
-            'title': "Hits %",
+            'title': "2nd %",
+            'description': "Percentage of centrifuge hits allocated to 2nd position",
             'scale': 'RdYlGn',
             'min': 0,
             'max': 100.0,
@@ -166,11 +177,13 @@ class MultiqcModule(BaseMultiqcModule):
             'custom_style': 'width=5%'
         }
         t5_headers['third_name'] = {
-            'title': "Third",
+            'title': "3rd Name",
+            'description': "Taxonomic name and id at 3rd position",
             'format': '{:50}'
         }
         t5_headers['third_count'] = {
-            'title': "Hits %",
+            'title': "3rd %",
+            'description': "Percentage of centrifuge hits allocated to 3rd position",
             'scale': 'RdYlGn',
             'min': 0,
             'max': 100.0,
@@ -178,12 +191,14 @@ class MultiqcModule(BaseMultiqcModule):
             'custom_style': 'width=5%'
         }
         t5_headers['fourth_name'] = {
-            'title': "Fourth",
+            'title': "4th Name",
+            'description': "Taxonomic name and id at 4th position",
             'format': '{:50}',
             'hidden': True
         }
         t5_headers['fourth_count'] = {
-            'title': "Hits %",
+            'title': "4th %",
+            'description': "Percentage of centrifuge hits allocated to 4th position",
             'scale': 'RdYlGn',
             'min': 0,
             'max': 100.0,
@@ -192,12 +207,14 @@ class MultiqcModule(BaseMultiqcModule):
             'hidden': True
         }
         t5_headers['fifth_name'] = {
-            'title': "Fifth",
+            'title': "5th Name",
+            'description': "Taxonomic name and id at 5th position",
             'format': '{:50}',
             'hidden': True
         }
         t5_headers['fifth_count'] = {
-            'title': "Hits %",
+            'title': "5th %",
+            'description': "Percentage of centrifuge hits allocated to 5th position",
             'scale': 'RdYlGn',
             'min': 0.0,
             'max': 100.0,
