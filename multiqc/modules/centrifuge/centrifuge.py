@@ -131,7 +131,7 @@ class MultiqcModule(BaseMultiqcModule):
             'namespace': 'Centrifuge',
             'scale': 'RdYlGn',
             'save_file': True,
-            'raw_data_fn': 'multiqc_centrifuge_taxatable'
+            'raw_data_fn': 'mqc_centrifuge_taxclas'
         }
 
         self.add_section(
@@ -222,19 +222,25 @@ class MultiqcModule(BaseMultiqcModule):
             'custom_style': 'width=5%',
             'hidden': True
         }
-        t5_config = {
+        t5_species_config = {
             'namespace': 'Centrifuge',
             'scale': 'RdYlGn',
             'save_file': True,
-            'raw_data_fn': 'multiqc_centrifuge_top5'
+            'raw_data_fn': 'mqc_centrifuge_top5_species'
         }
         self.add_section(
             name='Top Species',
             anchor='centrifuge-second',
             description='This table shows the most abundant species for each sample. Top 3 shown by default although up to top 5 available through configure columns button.',
             helptext="The intention of this table is to show a low-level view of what is present in each sample.",
-            plot=table.plot(self.top5_species_data, t5_headers, t5_config)
+            plot=table.plot(self.top5_species_data, t5_headers, t5_species_config)
         )
+        t5_classes_config = {
+            'namespace': 'Centrifuge',
+            'scale': 'RdYlGn',
+            'save_file': True,
+            'raw_data_fn': 'mqc_centrifuge_top5_classes'
+        }
         self.add_section(
             name='Top Classes',
             anchor='centrifuge-third',
@@ -242,7 +248,7 @@ class MultiqcModule(BaseMultiqcModule):
             helptext='Occasionally, groupings from lower ranks, such as "Order" or "Family" may be promoted to class level '
                      'and registered here if most abundant species has no defined class in it\'s taxonomic lineage.'
                      'The intention of this table is to give a mid-level taxonomic view of what is present in the sample',
-            plot=table.plot(self.top5_class_data, t5_headers, t5_config)
+            plot=table.plot(self.top5_class_data, t5_headers, t5_classes_config)
         )
 
         k_cats = OrderedDict()
@@ -271,7 +277,7 @@ class MultiqcModule(BaseMultiqcModule):
             'color': 'red'
         }
         k_config = {
-            'id': 'kingdom',
+            'id': 'centrifuge_kingdom',
             'cpswitch': True,
             'cpswitch_c_active': False,
             'title': 'Hits in each kingdom',
@@ -327,13 +333,12 @@ class MultiqcModule(BaseMultiqcModule):
             'name': 'Root',
             'color': 'gray'
         }
-        lineage_config = {
-            'id': 'cls_lineage',
+        rank_config = {
+            'id': 'centrifuge_ranks',
             'cpswitch': True,
             'cpswitch_c_active': False,
             'title': 'Hits at each rank in taxons lineage',
             'ymin': 0
-
         }
 
         self.add_section(
@@ -343,8 +348,16 @@ class MultiqcModule(BaseMultiqcModule):
             helptext="Most of the time we should expect most hits to occur at the species level, hence the plot should look"
                      "mostly green.  However, on occasion centrifuge may create hits at higher taxonomic level if there is"
                      "a high level of ambiguity in the alignments.  If that's the case here then it warrents further investigation.",
-            plot=bargraph.plot(self.rank_data, cats, lineage_config)
+            plot=bargraph.plot(self.rank_data, cats, rank_config)
         )
+
+        cls_lineage_config = {
+            'id': 'centrifuge_classified_lineage',
+            'cpswitch': True,
+            'cpswitch_c_active': False,
+            'title': 'Hits at each rank in taxons lineage',
+            'ymin': 0
+        }
 
         self.add_section(
             name='Classified taxons lineage',
@@ -357,8 +370,16 @@ class MultiqcModule(BaseMultiqcModule):
                      "plot to by greater than 50%.  If this was a metagenomic sample, or a non-model organism was sequenced, or"
                      "if the sample has heavy contamination, then we might expect the middle to upper ranks to contain larger"
                      "proportions of the bar graph.",
-            plot=bargraph.plot(self.cls_lineage_data, cats, lineage_config)
+            plot=bargraph.plot(self.cls_lineage_data, cats, cls_lineage_config)
         )
+
+        exp_lineage_config = {
+            'id': 'centrifuge_expected_lineage',
+            'cpswitch': True,
+            'cpswitch_c_active': False,
+            'title': 'Hits at each rank in taxons lineage',
+            'ymin': 0
+        }
 
         self.add_section(
             name='Expected taxons lineage',
@@ -367,7 +388,7 @@ class MultiqcModule(BaseMultiqcModule):
             helptext="See help for classified taxon's lineage for more details but to summarise this shows the lineage containing"
                      "the expected taxa if present.  If it wasn't provided then this plot will be all gray.  If the expected"
                      "taxa was a close match to the classfied taxa this should look very similar to the bar chart above.",
-            plot=bargraph.plot(self.els_lineage_data, cats, lineage_config)
+            plot=bargraph.plot(self.els_lineage_data, cats, exp_lineage_config)
         )
         
 
@@ -474,7 +495,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(desc_parts) == 0 or len(perc_parts) == 0 or len(count_parts) == 0:
             raise ValueError("Error: Could not find lineage with header: " + header + ".  Invalid centrifuge summary file.")
 
-        if len(desc_parts) != len(perc_parts) or len(desc_parts) != len(count_parts) or len(desc_parts) != 5:
+        if len(desc_parts) != len(perc_parts) or len(desc_parts) != len(count_parts):
             raise ValueError("Error: Lineage with header: " + header + "; has different number of header and value columns.")
 
         for i in range(len(desc_parts)):
@@ -483,6 +504,11 @@ class MultiqcModule(BaseMultiqcModule):
             #name, id, rank, rank_id = self.parse_taxon(h, rank=in_rank)
             t5_data[mapping[str(i)] + "_name"] = h
             t5_data[mapping[str(i)] + "_count"] = float(perc_parts[i])
+
+        if (len(desc_parts) < 5):
+            for i in range(len(desc_parts),5):
+                t5_data[mapping[str(i)] + "_name"] = "N/A"
+                t5_data[mapping[str(i)] + "_count"] = 0.0
 
         return t5_data
 
