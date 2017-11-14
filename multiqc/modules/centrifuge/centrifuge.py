@@ -34,7 +34,11 @@ class MultiqcModule(BaseMultiqcModule):
         # Initialise the parent object
         super(MultiqcModule, self).__init__(name='Centrifuge', anchor='centrifuge',
         href="https://ccb.jhu.edu/software/centrifuge/index.shtml",
-        info="Summarises centrifuge reports from multiple samples")
+        info=""" is a very rapid and memory-efficient system for the classification of DNA sequences.  The system uses a 
+    novel indexing scheme based on the Burrows-Wheeler transform (BWT) and the Ferragina-Manzini (FM) index, optimized 
+    specifically for the metagenomic classification problem.  The version of centrifuge used here was modified by EI to accomodate
+    efficient processing of multiple samples against the NCBI NT Database.  Centrifuge reports were parsed and interpretted 
+    using unique read counts per taxon to produce the summary statistics displayed below.""")
         
         self.table_data = {}
         self.cls_lineage_data = {}
