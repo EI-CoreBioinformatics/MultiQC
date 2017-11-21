@@ -252,16 +252,19 @@ class MultiqcModule(BaseMultiqcModule):
         hide_seq_length = False if max(seq_lengths) - min(seq_lengths) > 10 else True
 
         headers = OrderedDict()
-        headers['percent_duplicates'] = {
-            'title': '% Dups',
-            'description': '% Duplicate Reads',
-            'max': 100,
+        headers['total_sequences'] = {
+            #'title': '{} Seqs'.format(config.read_count_prefix),
+            'title': 'Reads',
+            #'description': 'Total Sequences ({})'.format(config.read_count_desc),
+            'description': 'Total number of sequences in this file',
             'min': 0,
-            'suffix': '%',
-            'scale': 'RdYlGn-rev'
+            'scale': 'Blues',
+            #'modify': lambda x: x * config.read_count_multiplier,
+            #'shared_key': 'read_count',
+            'format': '{:,.0f}',
         }
         headers['upto_q30'] = {
-            'title': 'Up to Q30',
+            'title': 'Mean Q30 to base',
             'description': 'First mean base to drop below Q30 (ignoring first base)',
             'min': 0,
             'scale': 'RdYlGn',
@@ -275,6 +278,14 @@ class MultiqcModule(BaseMultiqcModule):
             'suffix': '%',
             'scale': 'Set1',
             'format': '{:,.0f}'
+        }
+        headers['percent_duplicates'] = {
+            'title': '% Dups',
+            'description': '% Duplicate Reads',
+            'max': 100,
+            'min': 0,
+            'suffix': '%',
+            'scale': 'RdYlGn-rev'
         }
         headers['avg_sequence_length'] = {
             'title': 'Length',
@@ -295,17 +306,7 @@ class MultiqcModule(BaseMultiqcModule):
             'format': '{:,.0f}',
             'hidden': True
         }
-        headers['total_sequences'] = {
-            #'title': '{} Seqs'.format(config.read_count_prefix),
-            'title': '# Seqs',
-            #'description': 'Total Sequences ({})'.format(config.read_count_desc),
-            'description': 'Total Sequences',
-            'min': 0,
-            'scale': 'Blues',
-            #'modify': lambda x: x * config.read_count_multiplier,
-            #'shared_key': 'read_count',
-            'format': '{:,.0f}',
-        }
+
         self.general_stats_addcols(data, headers)
 
 
