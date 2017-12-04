@@ -114,7 +114,7 @@ class MultiqcModule(BaseMultiqcModule):
             'title': 'N50 (Kbp)',
             'description': 'N50 is the contig length such that using longer or equal length contigs produces half (50%) of the bases of the assembly (kilo base pairs)',
             'min': 0,
-            'suffix': 'bp',
+            'suffix': '',
             'scale': 'RdYlGn',
             'modify': lambda x: x / 1000
         }
@@ -122,7 +122,7 @@ class MultiqcModule(BaseMultiqcModule):
             'title': 'Length (Mbp)',
             'description': 'The total number of bases in the assembly (mega base pairs).',
             'min': 0,
-            'suffix': 'bp',
+            'suffix': '',
             'scale': 'YlGn',
             'modify': lambda x: x / 1000000
         }
@@ -136,7 +136,7 @@ class MultiqcModule(BaseMultiqcModule):
             'title': 'N50 (Kbp)',
             'description': 'N50 is the contig length such that using longer or equal length contigs produces 50% of the bases of the assembly (kilo base pairs)',
             'min': 0,
-            'suffix': 'bp',
+            'suffix': '',
             'scale': 'RdYlGn',
             'modify': lambda x: x / 1000
         }
@@ -145,7 +145,7 @@ class MultiqcModule(BaseMultiqcModule):
             'title': 'N75 (Kbp)',
             'description': 'N75 is the contig length such that using longer or equal length contigs produces 75% of the bases of the assembly (kilo base pairs)',
             'min': 0,
-            'suffix': 'bp',
+            'suffix': '',
             'scale': 'RdYlGn',
             'modify': lambda x: x / 1000
         }
@@ -169,7 +169,7 @@ class MultiqcModule(BaseMultiqcModule):
             'title': 'Largest contig (Kbp)',
             'description': 'The total number of bases in the assembly (mega base pairs).',
             'min': 0,
-            'suffix': 'bp',
+            'suffix': '',
             'scale': 'YlGn',
             'modify': lambda x: x / 1000
         }
@@ -177,7 +177,7 @@ class MultiqcModule(BaseMultiqcModule):
             'title': 'Length (Mbp)',
             'description': 'The total number of bases in the assembly (mega base pairs).',
             'min': 0,
-            'suffix': 'bp',
+            'suffix': '',
             'scale': 'YlGn',
             'modify': lambda x: x / 1000000
         }
