@@ -418,7 +418,7 @@ class MultiqcModule(BaseMultiqcModule):
             rank_part = parts2[1]
             rank = rank_part.split(':')[1][:-1].strip()
             rank = rank.strip()
-            rank_id = TaxRank[rank.upper()].value
+            rank_id = TaxRank[rank.upper()].value if rank != '?' else 0
             return name, id, rank, rank_id
 
 
