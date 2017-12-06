@@ -231,13 +231,15 @@ class MultiqcModule(BaseMultiqcModule):
                 data[s_name] = {
                     'sequence': overrep[0]['sequence'] if len(overrep) > 0 else "",
                     'count': overrep[0]['count'] if len(overrep) > 0 else 0,
-                    'percent': overrep[0]['percentage']  if len(overrep) > 0 else 0.0
+                    'percent': overrep[0]['percentage']  if len(overrep) > 0 else 0.0,
+                    'source' : overrep[0]['possible_source']  if len(overrep) > 0 else "",
                 }
             else:
                 data[s_name] = {
                     'sequence': "N/A",
                     'count': 0,
-                    'percent': 0.0
+                    'percent': 0.0,
+                    'source': "N/A"
                 }
 
         headers = OrderedDict()
@@ -266,13 +268,18 @@ class MultiqcModule(BaseMultiqcModule):
             'format': '{:,.0f}',
             'custom_style': 'width=10%'
         }
+        headers['source'] = {
+            'title': 'Possible Source',
+            'description': 'Possible source for the overrepresented sequence',
+            'custom_style': 'width=30%'
+        }
 
         overrep_config = {
             'namespace': 'FastQC',
             'save_file': True
         }
         self.add_section(
-            name='Overrepresented sequences table',
+            name='Overrepresented Sequences Table',
             anchor='fastqc_overrepresented',
             description='This table shows the most overrepresented sequence for each sample.  This is useful for distinguishing between adaptor content and low complexity sequences (PolyA/T runs in RNA seq data for example).',
             plot=table.plot(data, headers, overrep_config)
@@ -776,7 +783,7 @@ class MultiqcModule(BaseMultiqcModule):
             plot_html = bargraph.plot(data, cats, pconfig)
 
         self.add_section (
-            name = 'Overrepresented sequences',
+            name = 'Overrepresented Sequences',
             anchor = 'fastqc_overrepresented_sequences',
             description = 'The total amount of overrepresented sequences found in each library. ' +
                     'See the <a href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/9%20Overrepresented%20Sequences.html" target="_bkank">FastQC help for further information</a>.',

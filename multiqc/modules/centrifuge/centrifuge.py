@@ -139,7 +139,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         self.add_section(
-            name='Taxonomic classification',
+            name='Taxonomic Classification',
             anchor='centrifuge-first',
             description='Table showing classified taxon for each sample.  The classfied taxon is typically the first category '
                         '(starting from species level) to contain > 50% of total hits.  If sample has an expected taxon provided '
@@ -290,7 +290,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         self.add_section(
-            name='Kingdom classification',
+            name='Kingdom Classification',
             anchor='centrifuge-fourth',
             description='Bar plot showing hits falling into each Kingdom (or Super Kingdom).',
             helptext="Strictly speaking this plot does not necessarily contain all Kingdom-level taxonomic groupings, "
@@ -346,7 +346,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         self.add_section(
-            name='Rank hits',
+            name='Rank Hits',
             anchor='centrifuge-fifth',
             description='Bar plot showing the rank at which centrifuge hits were classified.',
             helptext="Most of the time we should expect most hits to occur at the species level, hence the plot should look"
@@ -364,7 +364,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         self.add_section(
-            name='Classified taxons lineage',
+            name='Classified Taxon Lineage',
             anchor='centrifuge-sixth',
             description='Bar plot showing the classified taxons lineage (largest taxa at each taxonomic rank incorperating the classified taxon).',
             helptext="This plot is showing the proportions of hits that occur along a taxonomic lineage that includes the"
@@ -386,7 +386,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         self.add_section(
-            name='Expected taxons lineage',
+            name='Expected Taxon Lineage',
             anchor='centrifuge-seventh',
             description='Bar plot showing the expected taxons lineage (largest taxa at each taxonomic rank incoperating the expected taxon).',
             helptext="See help for classified taxon's lineage for more details but to summarise this shows the lineage containing"
