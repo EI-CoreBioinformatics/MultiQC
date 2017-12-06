@@ -226,12 +226,19 @@ class MultiqcModule(BaseMultiqcModule):
         # Prep the data
         data = dict()
         for s_name in self.fastqc_data:
-            overrep = self.fastqc_data[s_name]['overrepresented_sequences']
-            data[s_name] = {
-                'sequence': overrep[0]['sequence'] if len(overrep) > 0 else "",
-                'count': overrep[0]['count'] if len(overrep) > 0 else 0,
-                'percent': overrep[0]['percentage']  if len(overrep) > 0 else 0.0
-            }
+            if 'overrepresented_sequences' in self.fastqc_data[s_name]:
+                overrep = self.fastqc_data[s_name]['overrepresented_sequences']
+                data[s_name] = {
+                    'sequence': overrep[0]['sequence'] if len(overrep) > 0 else "",
+                    'count': overrep[0]['count'] if len(overrep) > 0 else 0,
+                    'percent': overrep[0]['percentage']  if len(overrep) > 0 else 0.0
+                }
+            else:
+                data[s_name] = {
+                    'sequence': "N/A",
+                    'count': 0,
+                    'percent': 0.0
+                }
 
         headers = OrderedDict()
         headers['sequence'] = {
