@@ -20,7 +20,7 @@ import re
 import zipfile
 
 from multiqc import config
-from multiqc.plots import linegraph, bargraph
+from multiqc.plots import linegraph, bargraph, table
 from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
@@ -111,6 +111,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.seq_length_dist_plot()
         self.seq_dup_levels_plot()
         self.overrepresented_sequences()
+        self.overrepresented_sequences_table()
         self.adapter_content_plot()
 
     def parse_fastqc_report(self, file_contents, s_name=None, f=None):
@@ -219,6 +220,56 @@ class MultiqcModule(BaseMultiqcModule):
             total_count += d['count']
         if total_count > 0:
             self.fastqc_data[s_name]['basic_statistics']['avg_sequence_length'] = length_bp / total_count
+
+    def overrepresented_sequences_table(self):
+        """ Add the most overrepresented sequence plus some stats to it's own table """
+        # Prep the data
+        data = dict()
+        for s_name in self.fastqc_data:
+            overrep = self.fastqc_data[s_name]['overrepresented_sequences']
+            data[s_name] = {
+                'sequence': overrep[0]['sequence'] if len(overrep) > 0 else "",
+                'count': overrep[0]['count'] if len(overrep) > 0 else 0,
+                'percent': overrep[0]['percentage']  if len(overrep) > 0 else 0.0
+            }
+
+        headers = OrderedDict()
+        headers['sequence'] = {
+            # 'title': '{} Seqs'.format(config.read_count_prefix),
+            'title': 'Sequence',
+            # 'description': 'Total Sequences ({})'.format(config.read_count_desc),
+            'description': 'Most overrepresented sequence',
+            'custom_style': 'width=50%'
+        }
+        headers['count'] = {
+            'title': 'Count',
+            'description': 'Number of reads containing this sequence',
+            'min': 0,
+            'scale': 'RdYlGn-rev',
+            'format': '{:,.0f}',
+            'custom_style': 'width=10%'
+        }
+        headers['percent'] = {
+            'title': '% Reads',
+            'description': 'The percentage of reads containing this sequence',
+            'max': 100,
+            'min': 0,
+            'suffix': '%',
+            'scale': 'RdYlGn-rev',
+            'format': '{:,.0f}',
+            'custom_style': 'width=10%'
+        }
+
+        overrep_config = {
+            'namespace': 'FastQC',
+            'save_file': True
+        }
+        self.add_section(
+            name='Overrepresented sequences table',
+            anchor='fastqc_overrepresented',
+            description='This table shows the most overrepresented sequence for each sample.  This is useful for distinguishing between adaptor content and low complexity sequences (PolyA/T runs in RNA seq data for example).',
+            plot=table.plot(data, headers, overrep_config)
+        )
 
     def fastqc_general_stats(self):
         """ Add some single-number stats to the basic statistics
