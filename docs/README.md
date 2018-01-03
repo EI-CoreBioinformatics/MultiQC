@@ -19,6 +19,7 @@ MultiQC Modules:
     Flexbar: modules/flexbar.md
     InterOp: modules/interop.md
     Jellyfish: modules/jellyfish.md
+    KAT: modules/kat.md
     leeHom: modules/leehom.md
     Skewer: modules/skewer.md
     SortMeRNA: modules/sortmerna.md

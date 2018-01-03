@@ -191,6 +191,8 @@ interop/index-summary:
     contents: 'Total Reads,PF Reads,% Read Identified (PF),CV,Min,Max'
 jellyfish:
     fn: '*_jf.hist'
+kat:
+    fn: '*.kat'
 kallisto:
     contents: '[quant] finding pseudoalignments for the reads'
     shared: true

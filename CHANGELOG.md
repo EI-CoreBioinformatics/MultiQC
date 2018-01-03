@@ -4,6 +4,8 @@
 Added Centrifuge module, this only works on centrifuge summary files that are generated from
 centrifuge report files using a custom script.
 
+Added KAT module.  This operates on the kat_distanalysis output file from KAT version 1.4 onwards.
+
 
 #### New MultiQC Features:
 * If MultiQC breaks and shows am error message, it now reports the filename of the last log it found
