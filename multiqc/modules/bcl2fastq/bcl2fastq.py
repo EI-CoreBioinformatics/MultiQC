@@ -22,6 +22,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Collect counts by lane and sample (+source_files)
         self.bcl2fastq_bylane = dict()
+        self.bcl2fastq_undetermined = dict()
         self.bcl2fastq_bysample = dict()
         self.bcl2fastq_bysample_lane = dict()
         self.source_files = dict()
@@ -29,6 +30,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Filter to strip out ignored sample names
         self.bcl2fastq_bylane = self.ignore_samples(self.bcl2fastq_bylane)
+        self.bcl2fastq_undetermined = self.ignore_samples(self.bcl2fastq_undetermined)
         self.bcl2fastq_bysample = self.ignore_samples(self.bcl2fastq_bysample)
         self.bcl2fastq_bysample_lane = self.ignore_samples(self.bcl2fastq_bysample_lane)
 
@@ -51,6 +53,13 @@ class MultiqcModule(BaseMultiqcModule):
             anchor = 'bcl2fastq-lanestats',
             description = 'Statistics about each lane for each flowcell',
             plot = self.lane_stats_table()
+        )
+
+        self.add_section(
+            name = 'Top Undetermined Barcodes',
+            anchor='bcl2fastq-undetermined',
+            description='The undetermined barcodes from each lane with the highest counts',
+            plot = self.undetermined_table()
         )
 
         # Add section for counts by lane
@@ -124,7 +133,8 @@ class MultiqcModule(BaseMultiqcModule):
                 "perfectIndex": 0,
                 "samples": dict(),
                 "yieldQ30": 0,
-                "qscore_sum": 0
+                "qscore_sum": 0,
+                "unknown_barcodes": dict()
             }
             for demuxResult in conversionResult.get("DemuxResults", []):
                 sample = demuxResult["SampleName"]
@@ -165,6 +175,24 @@ class MultiqcModule(BaseMultiqcModule):
                     "qscore_sum": undeterminedQscoreSum
                 }
 
+        for unknownBarcodes in content.get("UnknownBarcodes", []):
+            lane = 'L{}'.format(unknownBarcodes["Lane"])
+            lane_unknown_barcodes = unknownBarcodes.get("Barcodes", [])
+            nb_to_count = min(len(lane_unknown_barcodes), 5)
+            run_data[lane]["unknown_barcodes"] = {
+                "1": {"barcode":"N/A", "count": 0},
+                "2": {"barcode":"N/A", "count": 0},
+                "3": {"barcode":"N/A", "count": 0},
+                "4": {"barcode":"N/A", "count": 0},
+                "5": {"barcode":"N/A", "count": 0}
+            }
+            for i, barcode in enumerate(lane_unknown_barcodes):
+                if i == nb_to_count:
+                    break
+                run_data[lane]["unknown_barcodes"][str(i+1)]["barcode"] = barcode
+                run_data[lane]["unknown_barcodes"][str(i+1)]["count"] = int(lane_unknown_barcodes[barcode])
+
+
         # Calculate Percents and averages
         for lane in run_data:
             run_data[lane]["percent_Q30"] = (float(run_data[lane]["yieldQ30"]) / float(run_data[lane]["total_yield"])) * 100.0
@@ -189,6 +217,18 @@ class MultiqcModule(BaseMultiqcModule):
                     "percent_Q30": self.bcl2fastq_data[runId][lane]["percent_Q30"],
                     "percent_perfectIndex": self.bcl2fastq_data[runId][lane]["percent_perfectIndex"],
                     "mean_qscore": self.bcl2fastq_data[runId][lane]["mean_qscore"]
+                }
+                self.bcl2fastq_undetermined[uniqLaneName] = {
+                    "first_barcode": self.bcl2fastq_data[runId][lane]["unknown_barcodes"]['1']['barcode'],
+                    "first_count": self.bcl2fastq_data[runId][lane]["unknown_barcodes"]['1']['count'],
+                    "second_barcode": self.bcl2fastq_data[runId][lane]["unknown_barcodes"]['2']['barcode'],
+                    "second_count": self.bcl2fastq_data[runId][lane]["unknown_barcodes"]['2']['count'],
+                    "third_barcode": self.bcl2fastq_data[runId][lane]["unknown_barcodes"]['3']['barcode'],
+                    "third_count": self.bcl2fastq_data[runId][lane]["unknown_barcodes"]['3']['count'],
+                    "fourth_barcode": self.bcl2fastq_data[runId][lane]["unknown_barcodes"]['4']['barcode'],
+                    "fourth_count": self.bcl2fastq_data[runId][lane]["unknown_barcodes"]['4']['count'],
+                    "fifth_barcode": self.bcl2fastq_data[runId][lane]["unknown_barcodes"]['5']['barcode'],
+                    "fifth_count": self.bcl2fastq_data[runId][lane]["unknown_barcodes"]['5']['count']
                 }
                 for sample in self.bcl2fastq_data[runId][lane]["samples"].keys():
                     if not sample in self.bcl2fastq_bysample:
@@ -293,6 +333,88 @@ class MultiqcModule(BaseMultiqcModule):
             'no_beeswarm': True
         }
         return table.plot(self.bcl2fastq_bylane, headers, table_config)
+
+    def undetermined_table(self):
+        """ Return a table with overview stats for each bcl2fastq lane for a single flow cell """
+        headers = OrderedDict()
+        headers['first_barcode'] = {
+            'title': '1st Barcode',
+            'description': 'Barcode with highest count',
+            'format': '{:50}'
+        }
+        headers['first_count'] = {
+            'title': "1st count",
+            'description': "Number of reads associated with top undetermined barcode",
+            'scale': 'RdYlGn',
+            'format': '{:,.1f}',
+            'min': 0,
+            'custom_style': 'width=5%'
+        }
+        headers['second_barcode'] = {
+            'title': '2nd Barcode',
+            'description': 'Barcode with second highest count',
+            'format': '{:50}'
+        }
+        headers['second_count'] = {
+            'title': "2nd count",
+            'description': "Number of reads associated with second top undetermined barcode",
+            'scale': 'RdYlGn',
+            'format': '{:,.1f}',
+            'min': 0,
+            'custom_style': 'width=5%'
+        }
+        headers['third_barcode'] = {
+            'title': '3rd Barcode',
+            'description': 'Barcode with third highest count',
+            'format': '{:50}'
+        }
+        headers['third_count'] = {
+            'title': "3rd count",
+            'description': "Number of reads associated with third top undetermined barcode",
+            'scale': 'RdYlGn',
+            'format': '{:,.1f}',
+            'min': 0,
+            'custom_style': 'width=5%'
+        }
+        headers['fourth_barcode'] = {
+            'title': '4th Barcode',
+            'description': 'Barcode with fourth highest count',
+            'format': '{:50}',
+            'hidden': True
+        }
+        headers['fourth_count'] = {
+            'title': "4th count",
+            'description': "Number of reads associated with fourth top undetermined barcode",
+            'scale': 'RdYlGn',
+            'format': '{:,.1f}',
+            'min': 0,
+            'custom_style': 'width=5%',
+            'hidden': True
+        }
+        headers['fifth_barcode'] = {
+            'title': '5th Barcode',
+            'description': 'Barcode with fifth highest count',
+            'format': '{:50}',
+            'hidden': True
+        }
+        headers['fifth_count'] = {
+            'title': "5th count",
+            'description': "Number of reads associated with fifth top undetermined barcode",
+            'scale': 'RdYlGn',
+            'format': '{:,.1f}',
+            'min': 0,
+            'custom_style': 'width=5%',
+            'hidden': True
+        }
+
+        table_config = {
+            'namespace': 'bcl2fastq',
+            'id': 'bcl2fastq-undetermined-table',
+            'table_title': 'bcl2fastq Undetermined Barcodes',
+            'col1_header': 'Run ID - Lane',
+            'no_beeswarm': True
+        }
+        return table.plot(self.bcl2fastq_undetermined, headers, table_config)
 
     def prepend_runid(self, runId, rest):
         return str(runId)+" - "+str(rest)
