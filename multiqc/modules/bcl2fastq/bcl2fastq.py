@@ -144,6 +144,7 @@ class MultiqcModule(BaseMultiqcModule):
                     "total": 0,
                     "total_yield": 0,
                     "perfectIndex": 0,
+                    "barcode": "",
                     "filename": os.path.join(myfile['root'],myfile["fn"]),
                     "yieldQ30": 0,
                     "qscore_sum": 0
@@ -152,8 +153,10 @@ class MultiqcModule(BaseMultiqcModule):
                 run_data[lane]["total_yield"] += demuxResult["Yield"]
                 run_data[lane]["samples"][sample]["total"] += demuxResult["NumberReads"]
                 run_data[lane]["samples"][sample]["total_yield"] += demuxResult["Yield"]
+                run_data[lane]["samples"][sample]["barcode"] = ""
                 if "IndexMetrics" in demuxResult:
                     for indexMetric in demuxResult["IndexMetrics"]:
+                        run_data[lane]["samples"][sample]["barcode"] = indexMetric["IndexSequence"]
                         run_data[lane]["perfectIndex"] += indexMetric["MismatchCounts"]["0"]
                         run_data[lane]["samples"][sample]["perfectIndex"] += indexMetric["MismatchCounts"]["0"]
                 for readMetric in demuxResult.get("ReadMetrics", []):
@@ -172,7 +175,8 @@ class MultiqcModule(BaseMultiqcModule):
                     "total_yield": conversionResult["Undetermined"]["Yield"],
                     "perfectIndex": 0,
                     "yieldQ30": undeterminedYieldQ30,
-                    "qscore_sum": undeterminedQscoreSum
+                    "qscore_sum": undeterminedQscoreSum,
+                    "barcode": ""
                 }
 
         for unknownBarcodes in content.get("UnknownBarcodes", []):
@@ -237,7 +241,8 @@ class MultiqcModule(BaseMultiqcModule):
                             "total_yield": 0,
                             "perfectIndex": 0,
                             "yieldQ30": 0,
-                            "qscore_sum": 0
+                            "qscore_sum": 0,
+                            "barcode": ""
                         }
                     if not sample in self.bcl2fastq_bysample_lane:
                         self.bcl2fastq_bysample_lane[sample] = dict()
@@ -247,6 +252,7 @@ class MultiqcModule(BaseMultiqcModule):
                     self.bcl2fastq_bysample[sample]["perfectIndex"] += self.bcl2fastq_data[runId][lane]["samples"][sample]["perfectIndex"]
                     self.bcl2fastq_bysample[sample]["yieldQ30"] += self.bcl2fastq_data[runId][lane]["samples"][sample]["yieldQ30"]
                     self.bcl2fastq_bysample[sample]["qscore_sum"] += self.bcl2fastq_data[runId][lane]["samples"][sample]["qscore_sum"]
+                    self.bcl2fastq_bysample[sample]["barcode"] = self.bcl2fastq_data[runId][lane]["samples"][sample]["barcode"]
                     self.bcl2fastq_bysample[sample]["percent_Q30"] = (float(self.bcl2fastq_bysample[sample]["yieldQ30"]) / float(self.bcl2fastq_bysample[sample]["total_yield"])) * 100.0
                     self.bcl2fastq_bysample[sample]["percent_perfectIndex"] = (float(self.bcl2fastq_bysample[sample]["perfectIndex"]) / float(self.bcl2fastq_bysample[sample]["total"])) * 100.0
                     self.bcl2fastq_bysample[sample]["mean_qscore"] = float(self.bcl2fastq_bysample[sample]["qscore_sum"]) / float(self.bcl2fastq_bysample[sample]["total_yield"])
@@ -261,16 +267,16 @@ class MultiqcModule(BaseMultiqcModule):
                 "yieldQ30": self.bcl2fastq_bysample[key]["yieldQ30"],
                 "total": self.bcl2fastq_bysample[key]["total"],
                 "perfectPercent": '{0:.1f}'.format(
-                    float( 100.0 * self.bcl2fastq_bysample[key]["perfectIndex"] / self.bcl2fastq_bysample[key]["total"] )
-                )
+                    float( 100.0 * self.bcl2fastq_bysample[key]["perfectIndex"] / self.bcl2fastq_bysample[key]["total"] )),
+                "barcode": self.bcl2fastq_bysample[key]["barcode"]
             } for key in self.bcl2fastq_bysample.keys()
         }
         headers = OrderedDict()
         headers['total'] = {
-            'title': '{} Clusters'.format(config.read_count_prefix),
-            'description': 'Total number of reads for this sample as determined by bcl2fastq demultiplexing ({})'.format(config.read_count_desc),
+            'title': 'Clusters',
+            'description': 'Total number of reads for this sample as determined by bcl2fastq demultiplexing',
             'scale': 'Blues',
-            'shared_key': 'read_count'
+            'format': '{:,.0f}'
         }
         headers['yieldQ30'] = {
             'title': '{} Yield &ge; Q30'.format(config.base_count_prefix),
@@ -286,6 +292,10 @@ class MultiqcModule(BaseMultiqcModule):
             'scale': 'RdYlGn',
             'suffix': '%'
         }
+        headers['barcode'] = {
+            'title': 'Barcode',
+            'description': 'The combined index sequence (i7 + i5) if present'
+        }
         self.general_stats_addcols(data, headers)
 
     def lane_stats_table(self):
@@ -298,10 +308,10 @@ class MultiqcModule(BaseMultiqcModule):
             'shared_key': 'base_count'
         }
         headers['total'] = {
-            'title': '{} Total Clusters'.format(config.read_count_prefix),
-            'description': 'Total number of clusters for this lane ({})'.format(config.read_count_desc),
+            'title': 'Total Clusters',
+            'description': 'Total number of clusters for this lane',
             'scale': 'Blues',
-            'shared_key': 'read_count'
+            'format': '{:,.0f}'
         }
         headers['percent_Q30'] = {
             'title': '% bases &ge; Q30',
