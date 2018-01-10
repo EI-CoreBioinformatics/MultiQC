@@ -346,7 +346,7 @@ class MultiqcModule(BaseMultiqcModule):
             'title': "1st count",
             'description': "Number of reads associated with top undetermined barcode",
             'scale': 'RdYlGn',
-            'format': '{:,.1f}',
+            'format': '{:,.0f}',
             'min': 0,
             'custom_style': 'width=5%'
         }
@@ -359,7 +359,7 @@ class MultiqcModule(BaseMultiqcModule):
             'title': "2nd count",
             'description': "Number of reads associated with second top undetermined barcode",
             'scale': 'RdYlGn',
-            'format': '{:,.1f}',
+            'format': '{:,.0f}',
             'min': 0,
             'custom_style': 'width=5%'
         }
@@ -372,7 +372,7 @@ class MultiqcModule(BaseMultiqcModule):
             'title': "3rd count",
             'description': "Number of reads associated with third top undetermined barcode",
             'scale': 'RdYlGn',
-            'format': '{:,.1f}',
+            'format': '{:,.0f}',
             'min': 0,
             'custom_style': 'width=5%'
         }
@@ -386,7 +386,7 @@ class MultiqcModule(BaseMultiqcModule):
             'title': "4th count",
             'description': "Number of reads associated with fourth top undetermined barcode",
             'scale': 'RdYlGn',
-            'format': '{:,.1f}',
+            'format': '{:,.0f}',
             'min': 0,
             'custom_style': 'width=5%',
             'hidden': True
@@ -401,7 +401,7 @@ class MultiqcModule(BaseMultiqcModule):
             'title': "5th count",
             'description': "Number of reads associated with fifth top undetermined barcode",
             'scale': 'RdYlGn',
-            'format': '{:,.1f}',
+            'format': '{:,.0f}',
             'min': 0,
             'custom_style': 'width=5%',
             'hidden': True
