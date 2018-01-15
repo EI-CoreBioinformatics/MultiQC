@@ -113,6 +113,7 @@ class MultiqcModule(BaseMultiqcModule):
             )
         )
 
+
     def parse_file_as_json(self, myfile):
         try:
             content = json.loads(myfile["f"])
@@ -199,13 +200,15 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Calculate Percents and averages
         for lane in run_data:
-            run_data[lane]["percent_Q30"] = (float(run_data[lane]["yieldQ30"]) / float(run_data[lane]["total_yield"])) * 100.0
-            run_data[lane]["percent_perfectIndex"] = (float(run_data[lane]["perfectIndex"]) / float(run_data[lane]["total"])) * 100.0
-            run_data[lane]["mean_qscore"] = float(run_data[lane]["qscore_sum"]) / float(run_data[lane]["total_yield"])
+            run_data[lane]["percent_Q30"] = safe_div(float(run_data[lane]["yieldQ30"]), float(run_data[lane]["total_yield"])) * 100.0
+            run_data[lane]["percent_perfectIndex"] = safe_div(float(run_data[lane]["perfectIndex"]), float(run_data[lane]["total"])) * 100.0
+            run_data[lane]["mean_qscore"] = safe_div(float(run_data[lane]["qscore_sum"]), float(run_data[lane]["total_yield"]))
             for sample, d in run_data[lane]["samples"].items():
-                run_data[lane]["samples"][sample]["percent_Q30"] = (float(d["yieldQ30"]) / float(d["total_yield"])) * 100.0
-                run_data[lane]["samples"][sample]["percent_perfectIndex"] = (float(d["perfectIndex"]) / float(d["total"])) * 100.0
-                run_data[lane]["samples"][sample]["mean_qscore"] = float(d["qscore_sum"]) / float(d["total_yield"])
+                tyd = float(d["total_yield"])
+                td = float(d["total"])
+                run_data[lane]["samples"][sample]["percent_Q30"] = safe_div(float(d["yieldQ30"]), float(d["total_yield"])) * 100.0
+                run_data[lane]["samples"][sample]["percent_perfectIndex"] = safe_div(float(d["perfectIndex"]), float(d["total"])) * 100.0
+                run_data[lane]["samples"][sample]["mean_qscore"] = safe_div(float(d["qscore_sum"]), float(d["total_yield"]))
 
     def split_data_by_lane_and_sample(self):
         for runId in self.bcl2fastq_data.keys():
@@ -253,9 +256,9 @@ class MultiqcModule(BaseMultiqcModule):
                     self.bcl2fastq_bysample[sample]["yieldQ30"] += self.bcl2fastq_data[runId][lane]["samples"][sample]["yieldQ30"]
                     self.bcl2fastq_bysample[sample]["qscore_sum"] += self.bcl2fastq_data[runId][lane]["samples"][sample]["qscore_sum"]
                     self.bcl2fastq_bysample[sample]["barcode"] = self.bcl2fastq_data[runId][lane]["samples"][sample]["barcode"]
-                    self.bcl2fastq_bysample[sample]["percent_Q30"] = (float(self.bcl2fastq_bysample[sample]["yieldQ30"]) / float(self.bcl2fastq_bysample[sample]["total_yield"])) * 100.0
-                    self.bcl2fastq_bysample[sample]["percent_perfectIndex"] = (float(self.bcl2fastq_bysample[sample]["perfectIndex"]) / float(self.bcl2fastq_bysample[sample]["total"])) * 100.0
-                    self.bcl2fastq_bysample[sample]["mean_qscore"] = float(self.bcl2fastq_bysample[sample]["qscore_sum"]) / float(self.bcl2fastq_bysample[sample]["total_yield"])
+                    self.bcl2fastq_bysample[sample]["percent_Q30"] = safe_div(float(self.bcl2fastq_bysample[sample]["yieldQ30"]) / float(self.bcl2fastq_bysample[sample]["total_yield"])) * 100.0
+                    self.bcl2fastq_bysample[sample]["percent_perfectIndex"] = safe_div(float(self.bcl2fastq_bysample[sample]["perfectIndex"]) / float(self.bcl2fastq_bysample[sample]["total"])) * 100.0
+                    self.bcl2fastq_bysample[sample]["mean_qscore"] = safe_div(float(self.bcl2fastq_bysample[sample]["qscore_sum"]) / float(self.bcl2fastq_bysample[sample]["total_yield"]))
                     if sample != "undetermined":
                         if not sample in self.source_files:
                             self.source_files[sample] = []
@@ -267,7 +270,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "yieldQ30": self.bcl2fastq_bysample[key]["yieldQ30"],
                 "total": self.bcl2fastq_bysample[key]["total"],
                 "perfectPercent": '{0:.1f}'.format(
-                    float( 100.0 * self.bcl2fastq_bysample[key]["perfectIndex"] / self.bcl2fastq_bysample[key]["total"] )),
+                    float( 100.0 * safe_div(self.bcl2fastq_bysample[key]["perfectIndex"], self.bcl2fastq_bysample[key]["total"] ))),
                 "barcode": self.bcl2fastq_bysample[key]["barcode"]
             } for key in self.bcl2fastq_bysample.keys()
         }
@@ -439,3 +442,8 @@ class MultiqcModule(BaseMultiqcModule):
             if "undetermined" in value:
                 bar_data[key]["undetermined"] = value["undetermined"]
         return bar_data
+
+def safe_div(x,y):
+    if y == 0:
+        return 0
+    return x / y
