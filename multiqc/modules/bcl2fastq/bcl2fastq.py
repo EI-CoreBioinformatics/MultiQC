@@ -79,6 +79,7 @@ class MultiqcModule(BaseMultiqcModule):
                 {
                     'id': 'bcl2fastq_lane_counts',
                     'title': 'bcl2fastq: Clusters by lane',
+                    'ylab': 'Number of clusters',
                     'hide_zero_cats': False
                 }
             )
@@ -200,15 +201,31 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Calculate Percents and averages
         for lane in run_data:
-            run_data[lane]["percent_Q30"] = safe_div(float(run_data[lane]["yieldQ30"]), float(run_data[lane]["total_yield"])) * 100.0
-            run_data[lane]["percent_perfectIndex"] = safe_div(float(run_data[lane]["perfectIndex"]), float(run_data[lane]["total"])) * 100.0
-            run_data[lane]["mean_qscore"] = safe_div(float(run_data[lane]["qscore_sum"]), float(run_data[lane]["total_yield"]))
+            try:
+                run_data[lane]["percent_Q30"] = (float(run_data[lane]["yieldQ30"]) / float(run_data[lane]["total_yield"])) * 100.0
+            except ZeroDivisionError:
+                run_data[lane]["percent_Q30"] = "NA"
+            try:
+                run_data[lane]["percent_perfectIndex"] = (float(run_data[lane]["perfectIndex"]) / float(run_data[lane]["total"])) * 100.0
+            except ZeroDivisionError:
+                run_data[lane]["percent_perfectIndex"] = "NA"
+            try:
+                run_data[lane]["mean_qscore"] = float(run_data[lane]["qscore_sum"]) / float(run_data[lane]["total_yield"])
+            except ZeroDivisionError:
+                run_data[lane]["mean_qscore"] = "NA"
             for sample, d in run_data[lane]["samples"].items():
-                tyd = float(d["total_yield"])
-                td = float(d["total"])
-                run_data[lane]["samples"][sample]["percent_Q30"] = safe_div(float(d["yieldQ30"]), float(d["total_yield"])) * 100.0
-                run_data[lane]["samples"][sample]["percent_perfectIndex"] = safe_div(float(d["perfectIndex"]), float(d["total"])) * 100.0
-                run_data[lane]["samples"][sample]["mean_qscore"] = safe_div(float(d["qscore_sum"]), float(d["total_yield"]))
+                try:
+                    run_data[lane]["samples"][sample]["percent_Q30"] = (float(d["yieldQ30"]) / float(d["total_yield"])) * 100.0
+                except ZeroDivisionError:
+                    run_data[lane]["samples"][sample]["percent_Q30"] = "NA"
+                try:
+                    run_data[lane]["samples"][sample]["percent_perfectIndex"] = (float(d["perfectIndex"]) / float(d["total"])) * 100.0
+                except ZeroDivisionError:
+                    run_data[lane]["samples"][sample]["percent_perfectIndex"] = "NA"
+                try:
+                    run_data[lane]["samples"][sample]["mean_qscore"] = float(d["qscore_sum"]) / float(d["total_yield"])
+                except ZeroDivisionError:
+                    run_data[lane]["samples"][sample]["mean_qscore"] = "NA"
 
     def split_data_by_lane_and_sample(self):
         for runId in self.bcl2fastq_data.keys():
@@ -255,10 +272,22 @@ class MultiqcModule(BaseMultiqcModule):
                     self.bcl2fastq_bysample[sample]["perfectIndex"] += self.bcl2fastq_data[runId][lane]["samples"][sample]["perfectIndex"]
                     self.bcl2fastq_bysample[sample]["yieldQ30"] += self.bcl2fastq_data[runId][lane]["samples"][sample]["yieldQ30"]
                     self.bcl2fastq_bysample[sample]["qscore_sum"] += self.bcl2fastq_data[runId][lane]["samples"][sample]["qscore_sum"]
-                    self.bcl2fastq_bysample[sample]["barcode"] = self.bcl2fastq_data[runId][lane]["samples"][sample]["barcode"]
-                    self.bcl2fastq_bysample[sample]["percent_Q30"] = safe_div(float(self.bcl2fastq_bysample[sample]["yieldQ30"]), float(self.bcl2fastq_bysample[sample]["total_yield"])) * 100.0
-                    self.bcl2fastq_bysample[sample]["percent_perfectIndex"] = safe_div(float(self.bcl2fastq_bysample[sample]["perfectIndex"]), float(self.bcl2fastq_bysample[sample]["total"])) * 100.0
-                    self.bcl2fastq_bysample[sample]["mean_qscore"] = safe_div(float(self.bcl2fastq_bysample[sample]["qscore_sum"]), float(self.bcl2fastq_bysample[sample]["total_yield"]))
+                    try:
+                        self.bcl2fastq_bysample[sample]["percent_Q30"] = (float(self.bcl2fastq_bysample[sample]["yieldQ30"]) / float(self.bcl2fastq_bysample[sample]["total_yield"])) * 100.0
+                    except ZeroDivisionError:
+                        self.bcl2fastq_bysample[sample]["percent_Q30"] = "NA"
+                    try:
+                        self.bcl2fastq_bysample[sample]["percent_perfectIndex"] = (float(self.bcl2fastq_bysample[sample]["perfectIndex"]) / float(self.bcl2fastq_bysample[sample]["total"])) * 100.0
+                    except ZeroDivisionError:
+                        self.bcl2fastq_bysample[sample]["percent_perfectIndex"] = "NA"
+                    try:
+                        self.bcl2fastq_bysample[sample]["percent_perfectIndex"] = (float(self.bcl2fastq_bysample[sample]["perfectIndex"]) / float(self.bcl2fastq_bysample[sample]["total"])) * 100.0
+                    except ZeroDivisionError:
+                        self.bcl2fastq_bysample[sample]["percent_perfectIndex"] = "NA"
+                    try:
+                        self.bcl2fastq_bysample[sample]["mean_qscore"] = float(self.bcl2fastq_bysample[sample]["qscore_sum"]) / float(self.bcl2fastq_bysample[sample]["total_yield"])
+                    except ZeroDivisionError:
+                        self.bcl2fastq_bysample[sample]["mean_qscore"] = "NA"
                     if sample != "undetermined":
                         if not sample in self.source_files:
                             self.source_files[sample] = []

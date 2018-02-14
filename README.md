@@ -43,13 +43,13 @@ Currently, supported tools include:
 |[InterOp][interop]               |[Slamdunk][slamdunk]    |[Samblaster][samblaster]   |[QoRTs][qorts]|
 |[FastQC][fastqc]                 |[STAR][star]            |[Samtools][samtools]       |[Qualimap][qualimap]|
 |[FastQ Screen][fastq-screen]     |[Tophat][tophat]        |[SnpEff][snpeff]           |[QUAST][quast]|
-|[Flexbar][flexbar]               |[Subread featureCounts][featurecounts]|[RNA-SeQC][rna_seqc]|
+|[Flexbar][flexbar]               ||[Subread featureCounts][featurecounts]             |[RNA-SeQC][rna_seqc]|
 |[Jellyfish][jellyfish]           |[Centrifuge][centrifuge]|[RSEM][rsem]               |[RSeQC][rseqc]|
-|[KAT][kat]                       |                        |[THetA2][theta2]           |[Supernova][supernova]| 
-|[Skewer][skewer]                 |                        |                           |[VCFTools][vcftools] |
-|[SortMeRNA][sortmerna]           |                        |                           |                      |
-|[Trimmomatic][trimmomatic]       |                        |                           |                      |
-|[Illumina InterOp][interop]      |                        |                           |                      |
+|[Skewer][skewer]                 |                        |[THetA2][theta2]           |[Sargasso][sargasso]|
+|[SortMeRNA][sortmerna]           |                        |                           |[Supernova][supernova] |
+|[Trimmomatic][trimmomatic]       |                        |                           |[VCFTools][vcftools] |
+|[Illumina InterOp][interop]      |                        |                           |[VerifyBAMID][verifybamid]                      |
+|[KAT][kat]                       |                        |                           |                      |
 
 MultiQC can also easily parse data from custom scripts, if correctly formatted / configured.
 See the [MultiQC documentation](http://multiqc.info/docs/#custom-content) for more information.
@@ -145,9 +145,11 @@ Project lead and main author: [@ewels](https://github.com/ewels)
 
 Code contributions from:
 [@ahvigil](https://github.com/ahvigil),
+[@aledj2](https://github.com/aledj2)
 [@avilella](https://github.com/avilella),
 [@boulund](https://github.com/boulund),
 [@bschiffthaler](https://github.com/bschiffthaler),
+[@Cashalow](https://github.com/Cashalow/),
 [@dakl](https://github.com/dakl),
 [@ehsueh](https://github.com/ehsueh)
 [@epruesse](https://github.com/epruesse),
@@ -219,6 +221,7 @@ MultiQC is released under the GPL v3 or later licence.
 [salmon]:         http://multiqc.info/docs/#salmon
 [samblaster]:     http://multiqc.info/docs/#samblaster
 [samtools]:       http://multiqc.info/docs/#samtools
+[sargasso]:       http://multiqc.info/docs/#sargasso
 [skewer]:         http://multiqc.info/docs/#skewer
 [slamdunk]:       http://multiqc.info/docs/#slamdunk
 [snpeff]:         http://multiqc.info/docs/#snpeff
@@ -229,3 +232,4 @@ MultiQC is released under the GPL v3 or later licence.
 [tophat]:         http://multiqc.info/docs/#tophat
 [trimmomatic]:    http://multiqc.info/docs/#trimmomatic
 [vcftools]:       http://multiqc.info/docs/#vcftools
+[verifyBAMID]:    http://multiqc.info/docs/#verifybamid
