@@ -243,13 +243,6 @@ class MultiqcModule(BaseMultiqcModule):
                 }
 
         headers = OrderedDict()
-        headers['sequence'] = {
-            # 'title': '{} Seqs'.format(config.read_count_prefix),
-            'title': 'Sequence',
-            # 'description': 'Total Sequences ({})'.format(config.read_count_desc),
-            'description': 'Most overrepresented sequence',
-            'custom_style': 'width=50%'
-        }
         headers['count'] = {
             'title': 'Count',
             'description': 'Number of reads containing this sequence',
@@ -273,8 +266,15 @@ class MultiqcModule(BaseMultiqcModule):
             'description': 'Possible source for the overrepresented sequence',
             'custom_style': 'width=30%'
         }
+		headers['sequence'] = {
+			# 'title': '{} Seqs'.format(config.read_count_prefix),
+			'title': 'Sequence',
+			# 'description': 'Total Sequences ({})'.format(config.read_count_desc),
+			'description': 'Most overrepresented sequence',
+			'custom_style': 'width=50%'
+		}
 
-        overrep_config = {
+		overrep_config = {
             'namespace': 'FastQC',
             'save_file': True
         }
