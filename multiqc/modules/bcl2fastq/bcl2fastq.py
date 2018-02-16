@@ -272,7 +272,7 @@ class MultiqcModule(BaseMultiqcModule):
                     self.bcl2fastq_bysample[sample]["perfectIndex"] += self.bcl2fastq_data[runId][lane]["samples"][sample]["perfectIndex"]
                     self.bcl2fastq_bysample[sample]["yieldQ30"] += self.bcl2fastq_data[runId][lane]["samples"][sample]["yieldQ30"]
                     self.bcl2fastq_bysample[sample]["qscore_sum"] += self.bcl2fastq_data[runId][lane]["samples"][sample]["qscore_sum"]
-					self.bcl2fastq_bysample[sample]["barcode"] = self.bcl2fastq_data[runId][lane]["samples"][sample]["barcode"]
+                    self.bcl2fastq_bysample[sample]["barcode"] = self.bcl2fastq_data[runId][lane]["samples"][sample]["barcode"]
                     try:
                         self.bcl2fastq_bysample[sample]["percent_Q30"] = (float(self.bcl2fastq_bysample[sample]["yieldQ30"]) / float(self.bcl2fastq_bysample[sample]["total_yield"])) * 100.0
                     except ZeroDivisionError:
