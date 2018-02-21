@@ -85,11 +85,12 @@ class MultiqcModule(BaseMultiqcModule):
 		i = 0
 		while i < len(content):
 			line = content[i].strip()
-			if line.startswith('K-mer Coverage Spectra statistics'):
+			if line.startswith('K-mer frequency spectra statistics'):
 				table_data['kmer_peaks'] = int(content[i + 3].split(':')[1].strip())
-				table_data['est_genome_size'] = int(float(content[i + 8].split(':')[1].strip()[:-4]) * 1000000.0)
 				table_data['mean_kmer_freq'] = int(content[i + 6].split(':')[1].strip()[:-1])
-				i += 8
+				i += 7
+			if line.startswith('Estimated genome size'):
+				table_data['est_genome_size'] = int(float(content[i].split(':')[1].strip()[:-4]) * 1000000.0)
 			if line.startswith('GC distribution statistics'):
 				table_data['gc_peaks'] = int(content[i + 3].split(':')[1].strip())
 				i += 4
