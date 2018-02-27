@@ -171,10 +171,9 @@ class MultiqcModule(BaseMultiqcModule):
         headers = OrderedDict()
         headers['Yield'] = {
             'rid': 'summary_Yield',
-            'title': '{} Bp Yield'.format(config.base_count_prefix),
-            'description': 'The number of bases sequenced ({})'.format(config.base_count_desc),
-            'scale': 'PuOr',
-            'shared_key': 'base_count'
+            'title': 'Bp Yield',
+            'description': 'The number of bases sequenced',
+            'scale': 'PuOr'
         }
         headers['Aligned'] = {
             'rid': 'summary_Aligned',
@@ -260,14 +259,14 @@ class MultiqcModule(BaseMultiqcModule):
             'scale': 'OrRd'
         }
         headers['Reads'] = {
-            'title': '{} Reads'.format(config.read_count_prefix),
-            'description': 'The number of clusters ({})'.format(config.read_count_desc),
-            'shared_key': 'read_count',
+            'title': 'Reads',
+            'description': 'The number of clusters',
+            'format': '{:,.0f}'
         }
         headers['Reads PF'] = {
-            'title': '{} PF Reads'.format(config.read_count_prefix),
-            'description': 'The number of passing filter clusters ({})'.format(config.read_count_desc),
-            'shared_key': 'read_count',
+            'title': 'PF Reads',
+            'description': 'The number of passing filter clusters',
+            'format': '{:,.0f}'
         }
         headers['Cycles Error'] = {
             'title': 'Cycles Error',
@@ -275,10 +274,10 @@ class MultiqcModule(BaseMultiqcModule):
             'format': '{:.,0f}',
         }
         headers['Yield'] = {
-            'title': '{} Bp Yield'.format(config.base_count_prefix),
-            'description': 'The number of bases sequenced which passed filter ({})'.format(config.base_count_desc),
+            'title': 'Bp Yield',
+            'description': 'The number of bases sequenced which passed filter',
             'scale': 'PuOr',
-            'shared_key': 'base_count'
+            'format': '{:,.0f}'
         }
         headers['Aligned'] = {
             'title': 'Aligned (%)',
@@ -352,18 +351,16 @@ class MultiqcModule(BaseMultiqcModule):
     def index_metrics_summary_table(self,data):
         headers = OrderedDict()
         headers['Total Reads'] = {
-            'title': '{} Reads'.format(config.read_count_prefix),
-            'description': 'The total number of reads for this lane ({})'.format(config.read_count_desc),
+            'title': 'Reads',
+            'description': 'The total number of reads for this lane',
             'modify': lambda x: float(x) * config.read_count_multiplier,
-            'format': '{:,.2f}',
-            'shared_key': 'read_count'
+            'format': '{:,.0f}'
         }
         headers['PF Reads'] = {
-            'title': '{} PF Reads'.format(config.read_count_prefix),
-            'description': 'The total number of passing filter reads for this lane ({})'.format(config.read_count_desc),
+            'title': 'PF Reads',
+            'description': 'The total number of passing filter reads for this lane',
             'modify': lambda x: float(x) * config.read_count_multiplier,
-            'format': '{:,.2f}',
-            'shared_key': 'read_count'
+            'format': '{:,.0f}'
         }
         headers['% Read Identified (PF)'] = {
             'rid': 'summary_reads_identified_pf',

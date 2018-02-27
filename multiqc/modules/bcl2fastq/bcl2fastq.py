@@ -312,10 +312,10 @@ class MultiqcModule(BaseMultiqcModule):
             'format': '{:,.0f}'
         }
         headers['yieldQ30'] = {
-            'title': '{} Yield &ge; Q30'.format(config.base_count_prefix),
-            'description': 'Number of bases with a Phred score of 30 or higher ({})'.format(config.base_count_desc),
+            'title': 'Yield &ge; Q30',
+            'description': 'Number of bases with a Phred score of 30 or higher',
             'scale': 'Greens',
-            'shared_key': 'base_count'
+            'format': '{:,.0f}'
         }
         headers['perfectPercent'] = {
             'title': '% Perfect Index',
@@ -335,10 +335,10 @@ class MultiqcModule(BaseMultiqcModule):
         """ Return a table with overview stats for each bcl2fastq lane for a single flow cell """
         headers = OrderedDict()
         headers['total_yield'] = {
-            'title': '{} Total Yield'.format(config.base_count_prefix),
-            'description': 'Number of bases ({})'.format(config.base_count_desc),
+            'title': 'Total Yield',
+            'description': 'Number of bases',
             'scale': 'Greens',
-            'shared_key': 'base_count'
+            'format': '{:,.0f}'
         }
         headers['total'] = {
             'title': 'Total Clusters',
