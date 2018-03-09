@@ -94,7 +94,7 @@ bowtie2:
     contents: 'reads; of these:'
     shared: true
 busco:
-    fn: '*_short_summary_*'
+    fn: '*short_summary*'
 centrifuge:
     fn: '*_centrifuge.summary'
     max_filesize: 5000
