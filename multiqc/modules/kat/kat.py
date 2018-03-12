@@ -3,6 +3,7 @@
 """ MultiQC module to parse output from KAT """
 import logging
 from collections import OrderedDict
+import json
 
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import table
@@ -22,7 +23,7 @@ class MultiqcModule(BaseMultiqcModule):
 		self.kat_data = dict()
 		for c_file in self.find_log_files('kat'):
 			s_name = self.clean_s_name(c_file['s_name'][:-4], c_file['root'])
-			content = c_file['f'].splitlines()
+			content = json.loads(c_file['f'])
 			self.kat_data[s_name] = self.parse_kat_report(content)
 
 			# Filter to strip out ignored sample names
@@ -82,18 +83,25 @@ class MultiqcModule(BaseMultiqcModule):
 
 	def parse_kat_report(self, content):
 		table_data = {}
-		i = 0
-		while i < len(content):
-			line = content[i].strip()
-			if line.startswith('K-mer frequency spectra statistics'):
-				table_data['kmer_peaks'] = int(content[i + 3].split(':')[1].strip())
-				table_data['mean_kmer_freq'] = int(content[i + 6].split(':')[1].strip()[:-1])
-				i += 7
-			if line.startswith('Estimated genome size'):
-				table_data['est_genome_size'] = int(float(content[i].split(':')[1].strip()[:-4]) * 1000000.0)
-			if line.startswith('GC distribution statistics'):
-				table_data['gc_peaks'] = int(content[i + 3].split(':')[1].strip())
-				i += 4
-			i+=1
+		if "gc" in content and "coverage" in content:
+			# GCP
+			table_data['kmer_peaks'] = content['coverage']['nb_peaks']
+			table_data['mean_kmer_freq'] = content['coverage']['mean_freq']
+			table_data['est_genome_size'] = content['coverage']['est_genome_size']
+			table_data['gc_peaks'] = content['gc']['nb_peaks']
+		elif "main_dist" in content:
+			# Spectra CN
+			table_data['kmer_peaks'] = content['main_dist']['nb_peaks']
+			table_data['mean_kmer_freq'] = content['main_dist']['mean_freq']
+			table_data['est_genome_size'] = content['main_dist']['est_genome_size']
+			table_data['gc_peaks'] = 0
+		elif "k" in content:
+			# Hist
+			table_data['kmer_peaks'] = content['nb_peaks']
+			table_data['mean_kmer_freq'] = content['mean_freq']
+			table_data['est_genome_size'] = content['est_genome_size']
+			table_data['gc_peaks'] = 0
+		else:
+			raise ValueError("Unexpected JSON configuration")
 
 		return table_data

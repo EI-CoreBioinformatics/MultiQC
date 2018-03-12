@@ -192,7 +192,7 @@ interop/index-summary:
 jellyfish:
     fn: '*_jf.hist'
 kat:
-    fn: '*.kat'
+    fn: '*.dist_analysis.json'
 kallisto:
     contents: '[quant] finding pseudoalignments for the reads'
     shared: true
