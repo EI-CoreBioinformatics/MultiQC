@@ -361,18 +361,6 @@ class MultiqcModule(BaseMultiqcModule):
                         except KeyError:
                             pass
 
-<<<<<<< HEAD
-    def add_general_stats(self):
-        data = {
-            key: {
-                "yieldQ30": self.bcl2fastq_bysample[key]["yieldQ30"],
-                "total": self.bcl2fastq_bysample[key]["total"],
-                "perfectPercent": '{0:.1f}'.format(
-                    float( 100.0 * safe_div(self.bcl2fastq_bysample[key]["perfectIndex"], self.bcl2fastq_bysample[key]["total"] ))),
-                "barcode": self.bcl2fastq_bysample[key]["barcode"]
-            } for key in self.bcl2fastq_bysample.keys()
-        }
-=======
     def get_unknown_barcodes(self, lane_unknown_barcode):
         """ Python 2.* dictionaries are not sorted.
         This function return an `OrderedDict` sorted by barcode count.
