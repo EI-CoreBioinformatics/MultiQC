@@ -161,37 +161,43 @@ class MultiqcModule(BaseMultiqcModule):
                     td['linkedTo'] = ':previous'
                 data.append(td)
 
-        html = '<div id="fq_screen_plot" class="hc-plot"></div> \n\
-        <script type="text/javascript"> \n\
-            fq_screen_data = {};\n\
-            fq_screen_categories = {};\n\
-            $(function () {{ \n\
-                $("#fq_screen_plot").highcharts({{ \n\
-                    chart: {{ type: "column", backgroundColor: null }}, \n\
-                    title: {{ text: "FastQ Screen Results" }}, \n\
-                    xAxis: {{ categories: fq_screen_categories }}, \n\
-                    yAxis: {{ \n\
-                        max: 100, \n\
-                        min: 0, \n\
-                        title: {{ text: "Percentage Aligned" }} \n\
-                    }}, \n\
-                    tooltip: {{ \n\
-                        formatter: function () {{ \n\
-                            return "<b>" + this.series.stackKey.replace("column","") + " - " + this.x + "</b><br/>" + \n\
-                                this.series.name + ": " + this.y + "%<br/>" + \n\
-                                "Total Alignment: " + this.point.stackTotal + "%"; \n\
-                        }}, \n\
-                    }}, \n\
-                    plotOptions: {{ \n\
-                        column: {{ \n\
-                            pointPadding: 0, \n\
-                            groupPadding: 0.02, \n\
-                            stacking: "normal" }} \n\
-                    }}, \n\
-                    series: fq_screen_data \n\
-                }}); \n\
-            }}); \n\
-        </script>'.format(json.dumps(data), json.dumps(categories))
+        html = '''<div id="fq_screen_plot" class="hc-plot"></div>
+        <script type="application/json" id="fq_screen_data">{}</script>
+        <script type="application/json" id="fq_screen_categories">{}</script>
+        '''.format(json.dumps(data), json.dumps(categories))
+
+        html += '''<script type="text/javascript">
+            fq_screen_data = JSON.parse(document.getElementById('fq_screen_data').innerHTML);
+            fq_screen_categories = JSON.parse(document.getElementById('fq_screen_categories').innerHTML);
+
+            $(function () {
+                $("#fq_screen_plot").highcharts({
+                    chart: { type: "column", backgroundColor: null },
+                    title: { text: "FastQ Screen Results" },
+                    xAxis: { categories: fq_screen_categories },
+                    yAxis: {
+                        max: 100,
+                        min: 0,
+                        title: { text: "Percentage Aligned" }
+                    },
+                    tooltip: {
+                        formatter: function () {
+                            return "<b>" + this.series.stackKey.replace("column","") + " - " + this.x + "</b><br/>" +
+                                this.series.name + ": " + this.y + "%<br/>" +
+                                "Total Alignment: " + this.point.stackTotal + "%";
+                        },
+                    },
+                    plotOptions: {
+                        column: {
+                            pointPadding: 0,
+                            groupPadding: 0.02,
+                            stacking: "normal"
+                        }
+                    },
+                    series: fq_screen_data
+                });
+            });
+        </script>'''
 
         return html
 
@@ -203,7 +209,7 @@ class MultiqcModule(BaseMultiqcModule):
         # First, sum the different types of alignment counts
         data = OrderedDict()
         cats = OrderedDict()
-        for s_name in self.fq_screen_data:
+        for s_name in sorted(self.fq_screen_data):
             data[s_name] = OrderedDict()
             sum_alignments = 0
             for org in self.fq_screen_data[s_name]:
@@ -234,12 +240,10 @@ class MultiqcModule(BaseMultiqcModule):
         pconfig = {
             'id': 'fastq_screen',
             'title': 'FastQ Screen',
-            'cpswitch_c_active': False
+            'cpswitch_c_active': False,
+            'hide_zero_cats': False
         }
         cats['Multiple Genomes'] = { 'name': 'Multiple Genomes', 'color': '#820000' }
         cats['No hits'] = { 'name': 'No hits', 'color': '#cccccc' }
 
         return bargraph.plot(data, cats, pconfig)
-
-
-

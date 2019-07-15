@@ -56,7 +56,10 @@ class datatable (object):
             for k in list(headers[idx].keys()):
                 headers[idx][str(k)] = headers[idx].pop(k)
             # Ensure that all sample names are strings as well
-            data[idx] = {str(k):v for k,v in data[idx].items()}
+            cdata = OrderedDict()
+            for k,v in data[idx].items():
+                cdata[str(k)] = v
+            data[idx] = cdata
             for s_name in data[idx].keys():
                 for k in list(data[idx][s_name].keys()):
                     data[idx][s_name][str(k)] = data[idx][s_name].pop(k)
@@ -131,7 +134,10 @@ class datatable (object):
                 try:
                     headers[idx][k]['placement'] = float(config.table_columns_placement[ headers[idx][k]['namespace'] ][k])
                 except (KeyError, ValueError):
-                    pass
+                    try:
+                        headers[idx][k]['placement'] = float(config.table_columns_placement[ pconfig['id'] ][k])
+                    except (KeyError, ValueError):
+                        pass
 
                 # Work out max and min value if not given
                 setdmax = False

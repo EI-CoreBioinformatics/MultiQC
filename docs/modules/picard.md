@@ -22,6 +22,18 @@ Supported commands:
 * `RnaSeqMetrics`
 * `AlignmentSummaryMetrics`
 * `RrbsSummaryMetrics`
+* `ValidateSamFile`
+* `VariantCallingMetrics`
+
+#### InsertSizeMetrics
+By default, the insert size plot is smoothed to contain a maximum of 500 data points per sample.
+This is to prevent the MultiQC report from being very large with big datasets.
+If you would like to customise this value to get a better resolution you can set the following
+MultiQC config values, with the new maximum number of points:
+```yaml
+picard_config:
+    insertsize_smooth_points: 10000
+```
 
 #### Coverage Levels
 It's possible to customise the HsMetrics _"Target Bases 30X"_ coverage and
@@ -44,4 +56,12 @@ picard_config:
     general_stats_target_coverage:
         - 10
         - 50
+```
+
+#### ValidateSamFile Search Pattern
+Generally, Picard adds identifiable content to the output of function calls. This is not the case for ValidateSamFile. In order to identify logs the MultiQC Picard submodule `ValidateSamFile` will search for filenames that contain 'validatesamfile' or 'ValidateSamFile'. One can customise the used search pattern by overwriting the `picard/sam_file_validation` pattern in your MultiQC config. For example:
+```yaml
+sp:
+    picard/sam_file_validation:
+        fn: '*[Vv]alidate[Ss]am[Ff]ile*'
 ```

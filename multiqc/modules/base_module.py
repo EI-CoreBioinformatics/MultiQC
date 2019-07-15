@@ -8,6 +8,7 @@ import io
 import fnmatch
 import logging
 import markdown
+import mimetypes
 import os
 import re
 import textwrap
@@ -71,6 +72,7 @@ class BaseMultiqcModule(object):
         # Pick up path filters if specified.
         # Allows modules to be called multiple times with different sets of files
         path_filters = getattr(self, 'mod_cust_config', {}).get('path_filters')
+        path_filters_exclude = getattr(self, 'mod_cust_config', {}).get('path_filters_exclude')
 
         # Old, depreciated syntax support. Likely to be removed in a future version.
         if isinstance(sp_key, dict):
@@ -92,26 +94,45 @@ class BaseMultiqcModule(object):
             # Make a note of the filename so that we can report it if something crashes
             report.last_found_file = os.path.join(f['root'], f['fn'])
 
-            # If path_filters is given, skip unless match
-            if path_filters is not None and len(path_filters) > 0:
-                if not all([fnmatch.fnmatch(report.last_found_file, pf) for pf in path_filters]):
-                    logger.debug("{} - Skipping '{}' as didn't match module path filters".format(sp_key, f['fn']))
+            # Filter out files based on exclusion patterns
+            if path_filters_exclude and len(path_filters_exclude) > 0:
+                exlusion_hits = (fnmatch.fnmatch(report.last_found_file, pfe) for pfe in path_filters_exclude)
+                if any(exlusion_hits):
+                    logger.debug("{} - Skipping '{}' as it matched the path_filters_exclude for '{}'".format(sp_key, f['fn'], self.name))
                     continue
+
+            # Filter out files based on inclusion patterns
+            if path_filters and len(path_filters) > 0:
+                inclusion_hits = (fnmatch.fnmatch(report.last_found_file, pf) for pf in path_filters)
+                if not any(inclusion_hits):
+                    logger.debug("{} - Skipping '{}' as it didn't match the path_filters for '{}'".format(sp_key, f['fn'], self.name))
+                    continue
+                else:
+                    logger.debug("{} - Selecting '{}' as it matched the path_filters for '{}'".format(sp_key, f['fn'], self.name))
 
             # Make a sample name from the filename
             f['s_name'] = self.clean_s_name(f['fn'], f['root'])
             if filehandles or filecontents:
                 try:
-                    with io.open (os.path.join(f['root'],f['fn']), "r", encoding='utf-8') as fh:
-                        if filehandles:
+                    # Custom content module can now handle image files
+                    (ftype, encoding) = mimetypes.guess_type(os.path.join(f['root'], f['fn']))
+                    if ftype is not None and ftype.startswith('image'):
+                        with io.open (os.path.join(f['root'],f['fn']), "rb") as fh:
+                            # always return file handles
                             f['f'] = fh
                             yield f
-                        elif filecontents:
-                            f['f'] = fh.read()
-                            yield f
-                except (IOError, OSError, ValueError, UnicodeDecodeError):
+                    else:
+                        # Everything else - should be all text files
+                        with io.open (os.path.join(f['root'],f['fn']), "r", encoding='utf-8') as fh:
+                            if filehandles:
+                                f['f'] = fh
+                                yield f
+                            elif filecontents:
+                                f['f'] = fh.read()
+                                yield f
+                except (IOError, OSError, ValueError, UnicodeDecodeError) as e:
                     if config.report_readerrors:
-                        logger.debug("Couldn't open filehandle when returning file: {}".format(f['fn']))
+                        logger.debug("Couldn't open filehandle when returning file: {}\n{}".format(f['fn'], e))
                         f['f'] = None
             else:
                 yield f
@@ -127,6 +148,11 @@ class BaseMultiqcModule(object):
             else:
                 sl = len(self.sections) + 1
                 anchor = '{}-section-{}'.format(self.anchor, sl)
+
+        # Skip if user has a config to remove this module section
+        if anchor in config.remove_sections:
+            logger.debug("Skipping section '{}' because specified in user config".format(anchor))
+            return
 
         # Sanitise anchor ID and check for duplicates
         anchor = report.save_htmlid(anchor)
@@ -174,20 +200,10 @@ class BaseMultiqcModule(object):
         :config.prepend_dirs: boolean, whether to prepend dir name to s_name
         :return: The cleaned sample name, ready to be used
         """
+        s_name_original = s_name
         if root is None:
             root = ''
-        if config.prepend_dirs:
-            sep = config.prepend_dirs_sep
-            root = root.lstrip('.{}'.format(os.sep))
-            dirs = [d.strip() for d in root.split(os.sep) if d.strip() != '']
-            if config.prepend_dirs_depth != 0:
-                d_idx = config.prepend_dirs_depth * -1
-                if config.prepend_dirs_depth > 0:
-                    dirs = dirs[d_idx:]
-                else:
-                    dirs = dirs[:d_idx]
-            if len(dirs) > 0:
-                s_name = "{}{}{}".format(sep.join(dirs), sep, s_name)
+
         if config.fn_clean_sample_names:
             # Split then take first section to remove everything after these matches
             for ext in config.fn_clean_exts:
@@ -214,8 +230,24 @@ class BaseMultiqcModule(object):
                 if s_name.startswith(chrs):
                     s_name = s_name[len(chrs):]
 
+        # Prepend sample name with directory
+        if config.prepend_dirs:
+            sep = config.prepend_dirs_sep
+            root = root.lstrip('.{}'.format(os.sep))
+            dirs = [d.strip() for d in root.split(os.sep) if d.strip() != '']
+            if config.prepend_dirs_depth != 0:
+                d_idx = config.prepend_dirs_depth * -1
+                if config.prepend_dirs_depth > 0:
+                    dirs = dirs[d_idx:]
+                else:
+                    dirs = dirs[:d_idx]
+            if len(dirs) > 0:
+                s_name = "{}{}{}".format(sep.join(dirs), sep, s_name)
+
         # Remove trailing whitespace
         s_name = s_name.strip()
+        if s_name == '':
+            s_name = s_name_original
 
         return s_name
 

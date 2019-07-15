@@ -24,7 +24,7 @@ MultiQC was written by Phil Ewels (http://phil.ewels.co.uk) at SciLifeLab Sweden
 from setuptools import setup, find_packages
 import sys
 
-version = '1.5ei'
+version = '1.8ei'
 dl_version = 'master' if 'dev' in version else 'v{}'.format(version)
 
 print("""-----------------------------------
@@ -33,21 +33,26 @@ print("""-----------------------------------
 
 """.format(version))
 
+matplotlib_version = '>=2.1.1'
+if sys.version_info[0] == 2:
+    matplotlib_version += ',<3.0.0'
+else:
+    matplotlib_version += ',<3.1.0'
+
 install_requires = [
         'click',
         'future>0.14.0',
         'lzstring',
         'jinja2>=2.9',
-        'matplotlib',
+        'matplotlib' + matplotlib_version,
         'markdown',
         'numpy',
-        'pyyaml',
+        'pyyaml>=4',
         'requests',
         'simplejson',
-        'spectra>=0.0.10'
+        'spectra>=0.0.10',
+        'networkx' + ('<2.3' if sys.version_info[0:2] < (3, 5) else ''),  # pin for py<3.5
     ]
-if sys.version_info < (3, 4):
-    install_requires.append('enum34')
 
 setup(
     name = 'multiqc',
@@ -73,26 +78,35 @@ setup(
             'bbmap = multiqc.modules.bbmap:MultiqcModule',
             'bcftools = multiqc.modules.bcftools:MultiqcModule',
             'bcl2fastq = multiqc.modules.bcl2fastq:MultiqcModule',
+            'biobambam2 = multiqc.modules.biobambam2:MultiqcModule',
             'biobloomtools = multiqc.modules.biobloomtools:MultiqcModule',
             'bismark = multiqc.modules.bismark:MultiqcModule',
+            'biscuit = multiqc.modules.biscuit:MultiqcModule',
             'bowtie1 = multiqc.modules.bowtie1:MultiqcModule',
             'bowtie2 = multiqc.modules.bowtie2:MultiqcModule',
             'busco = multiqc.modules.busco:MultiqcModule',
             'centrifuge = multiqc.modules.centrifuge:MultiqcModule',
+            'clipandmerge = multiqc.modules.clipandmerge:MultiqcModule',
             'clusterflow = multiqc.modules.clusterflow:MultiqcModule',
             'conpair = multiqc.modules.conpair:MultiqcModule',
             'custom_content = multiqc.modules.custom_content:custom_module_classes', # special case
             'cutadapt = multiqc.modules.cutadapt:MultiqcModule',
+            'damageprofiler = multiqc.modules.damageprofiler:MultiqcModule',
             'disambiguate = multiqc.modules.disambiguate:MultiqcModule',
+            'dedup = multiqc.modules.dedup:MultiqcModule',
             'deeptools = multiqc.modules.deeptools:MultiqcModule',
+            'fastp = multiqc.modules.fastp:MultiqcModule',
             'fastq_screen = multiqc.modules.fastq_screen:MultiqcModule',
             'fastqc = multiqc.modules.fastqc:MultiqcModule',
             'featureCounts = multiqc.modules.featureCounts:MultiqcModule',
+            'flash = multiqc.modules.flash:MultiqcModule',
             'flexbar = multiqc.modules.flexbar:MultiqcModule',
             'gatk = multiqc.modules.gatk:MultiqcModule',
             'goleft_indexcov = multiqc.modules.goleft_indexcov:MultiqcModule',
+            'happy = multiqc.modules.happy:MultiqcModule',
             'hicexplorer = multiqc.modules.hicexplorer:MultiqcModule',
             'hicup = multiqc.modules.hicup:MultiqcModule',
+            'hicpro = multiqc.modules.hicpro:MultiqcModule',
             'hisat2 = multiqc.modules.hisat2:MultiqcModule',
             'homer = multiqc.modules.homer:MultiqcModule',
             'htseq = multiqc.modules.htseq:MultiqcModule',
@@ -101,9 +115,15 @@ setup(
             'kallisto = multiqc.modules.kallisto:MultiqcModule',
             'kat = multiqc.modules.kat:MultiqcModule',
             'leehom = multiqc.modules.leehom:MultiqcModule',
+            'longranger = multiqc.modules.longranger:MultiqcModule',
             'macs2 = multiqc.modules.macs2:MultiqcModule',
             'methylQA = multiqc.modules.methylQA:MultiqcModule',
+            'mirtrace = multiqc.modules.mirtrace:MultiqcModule',
+            'minionqc = multiqc.modules.minionqc:MultiqcModule',
+            'mosdepth = multiqc.modules.mosdepth:MultiqcModule',
+            'mtnucratio = multiqc.modules.mtnucratio:MultiqcModule',
             'peddy = multiqc.modules.peddy:MultiqcModule',
+            'phantompeakqualtools = multiqc.modules.phantompeakqualtools:MultiqcModule',
             'picard = multiqc.modules.picard:MultiqcModule',
             'preseq = multiqc.modules.preseq:MultiqcModule',
             'prokka = multiqc.modules.prokka:MultiqcModule',
@@ -121,6 +141,7 @@ setup(
             'slamdunk = multiqc.modules.slamdunk:MultiqcModule',
             'snpeff = multiqc.modules.snpeff:MultiqcModule',
             'sortmerna = multiqc.modules.sortmerna:MultiqcModule',
+            'stacks = multiqc.modules.stacks:MultiqcModule',
             'star = multiqc.modules.star:MultiqcModule',
             'supernova = multiqc.modules.supernova:MultiqcModule',
             'theta2 = multiqc.modules.theta2:MultiqcModule',
