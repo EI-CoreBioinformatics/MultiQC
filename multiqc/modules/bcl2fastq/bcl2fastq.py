@@ -29,7 +29,6 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Collect counts by lane and sample (+source_files)
         self.bcl2fastq_bylane = dict()
-        self.bcl2fastq_undetermined = dict()
         self.bcl2fastq_bysample = dict()
         self.bcl2fastq_bysample_lane = dict()
         self.source_files = dict()
@@ -37,7 +36,6 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Filter to strip out ignored sample names
         self.bcl2fastq_bylane = self.ignore_samples(self.bcl2fastq_bylane)
-        self.bcl2fastq_undetermined = self.ignore_samples(self.bcl2fastq_undetermined)
         self.bcl2fastq_bysample = self.ignore_samples(self.bcl2fastq_bysample)
         self.bcl2fastq_bysample_lane = self.ignore_samples(self.bcl2fastq_bysample_lane)
 
@@ -68,13 +66,6 @@ class MultiqcModule(BaseMultiqcModule):
             anchor = 'bcl2fastq-lanestats',
             description = 'Statistics about each lane for each flowcell',
             plot = self.lane_stats_table()
-        )
-
-        self.add_section(
-            name = 'Top Undetermined Barcodes',
-            anchor='bcl2fastq-undetermined',
-            description='The undetermined barcodes from each lane with the highest counts',
-            plot = self.undetermined_table()
         )
 
         # Add section for counts by lane
@@ -129,8 +120,6 @@ class MultiqcModule(BaseMultiqcModule):
             )
         )
 
-<<<<<<< HEAD
-=======
         # Add section with undetermined barcodes
         self.add_section(
             name = "Undetermined barcodes by lane",
@@ -149,7 +138,6 @@ class MultiqcModule(BaseMultiqcModule):
                 }
             )
         )
->>>>>>> upstream/master
 
     def parse_file_as_json(self, myfile):
         try:
@@ -199,29 +187,14 @@ class MultiqcModule(BaseMultiqcModule):
                     "total": 0,
                     "total_yield": 0,
                     "perfectIndex": 0,
-<<<<<<< HEAD
                     "barcode": "",
-                    "filename": os.path.join(myfile['root'],myfile["fn"]),
-                    "yieldQ30": 0,
-                    "qscore_sum": 0
-                }
-                run_data[lane]["total"] += demuxResult["NumberReads"]
-                run_data[lane]["total_yield"] += demuxResult["Yield"]
-                run_data[lane]["samples"][sample]["total"] += demuxResult["NumberReads"]
-                run_data[lane]["samples"][sample]["total_yield"] += demuxResult["Yield"]
-                run_data[lane]["samples"][sample]["barcode"] = ""
-                if "IndexMetrics" in demuxResult:
-                    for indexMetric in demuxResult["IndexMetrics"]:
-                        run_data[lane]["samples"][sample]["barcode"] = indexMetric["IndexSequence"]
-                        run_data[lane]["perfectIndex"] += indexMetric["MismatchCounts"]["0"]
-                        run_data[lane]["samples"][sample]["perfectIndex"] += indexMetric["MismatchCounts"]["0"]
-=======
                     "filename": os.path.join(myfile['root'], myfile["fn"]),
                     "yieldQ30": 0,
                     "qscore_sum": 0
                 }
                 # simplify the population of dictionaries
                 lsample = run_data[lane]["samples"][sample]
+                lsample["barcode"] = ""
                 for r in range(1,5):
                         lsample["R{}_yield".format(r)] = 0
                         lsample["R{}_Q30".format(r)] = 0
@@ -233,7 +206,7 @@ class MultiqcModule(BaseMultiqcModule):
                 for indexMetric in demuxResult.get("IndexMetrics", []):
                     rlane["perfectIndex"] += indexMetric["MismatchCounts"]["0"]
                     lsample["perfectIndex"] += indexMetric["MismatchCounts"]["0"]
->>>>>>> upstream/master
+                    lsample["barcode"] = indexMetric["IndexSequence"]
                 for readMetric in demuxResult.get("ReadMetrics", []):
                     r = readMetric["ReadNumber"]
                     rlane["yieldQ30"] += readMetric["YieldQ30"]
@@ -263,14 +236,11 @@ class MultiqcModule(BaseMultiqcModule):
                     "perfectIndex": 0,
                     "yieldQ30": undeterminedYieldQ30,
                     "qscore_sum": undeterminedQscoreSum,
-<<<<<<< HEAD
                     "barcode": ""
-=======
                     "trimmed_bases": undeterminedTrimmedBases
->>>>>>> upstream/master
                 }
 
-        for unknownBarcodes in content.get("UnknownBarcodes", []):
+        """ for unknownBarcodes in content.get("UnknownBarcodes", []):
             lane = 'L{}'.format(unknownBarcodes["Lane"])
             lane_unknown_barcodes = unknownBarcodes.get("Barcodes", [])
             nb_to_count = min(len(lane_unknown_barcodes), 5)
@@ -286,7 +256,7 @@ class MultiqcModule(BaseMultiqcModule):
                     break
                 run_data[lane]["unknown_barcodes"][str(i+1)]["barcode"] = barcode
                 run_data[lane]["unknown_barcodes"][str(i+1)]["count"] = int(lane_unknown_barcodes[barcode])
-
+        """
 
         # Calculate Percents and averages
         for lane_id, lane in run_data.items():
@@ -336,27 +306,9 @@ class MultiqcModule(BaseMultiqcModule):
                     "mean_qscore": lane["mean_qscore"],
                     "unknown_barcodes": self.get_unknown_barcodes(lane['unknown_barcodes']),
                 }
-<<<<<<< HEAD
-                self.bcl2fastq_undetermined[uniqLaneName] = {
-                    "first_barcode": self.bcl2fastq_data[runId][lane]["unknown_barcodes"]['1']['barcode'],
-                    "first_count": self.bcl2fastq_data[runId][lane]["unknown_barcodes"]['1']['count'],
-                    "second_barcode": self.bcl2fastq_data[runId][lane]["unknown_barcodes"]['2']['barcode'],
-                    "second_count": self.bcl2fastq_data[runId][lane]["unknown_barcodes"]['2']['count'],
-                    "third_barcode": self.bcl2fastq_data[runId][lane]["unknown_barcodes"]['3']['barcode'],
-                    "third_count": self.bcl2fastq_data[runId][lane]["unknown_barcodes"]['3']['count'],
-                    "fourth_barcode": self.bcl2fastq_data[runId][lane]["unknown_barcodes"]['4']['barcode'],
-                    "fourth_count": self.bcl2fastq_data[runId][lane]["unknown_barcodes"]['4']['count'],
-                    "fifth_barcode": self.bcl2fastq_data[runId][lane]["unknown_barcodes"]['5']['barcode'],
-                    "fifth_count": self.bcl2fastq_data[runId][lane]["unknown_barcodes"]['5']['count']
-                }
-                for sample in self.bcl2fastq_data[runId][lane]["samples"].keys():
-                    if not sample in self.bcl2fastq_bysample:
-                        self.bcl2fastq_bysample[sample] = {
-=======
                 for sample_id, sample in lane["samples"].items():
                     if sample_id not in self.bcl2fastq_bysample:
                         self.bcl2fastq_bysample[sample_id] = {
->>>>>>> upstream/master
                             "total": 0,
                             "total_yield": 0,
                             "perfectIndex": 0,
@@ -364,17 +316,6 @@ class MultiqcModule(BaseMultiqcModule):
                             "qscore_sum": 0,
                             "barcode": ""
                         }
-<<<<<<< HEAD
-                    if not sample in self.bcl2fastq_bysample_lane:
-                        self.bcl2fastq_bysample_lane[sample] = dict()
-                    self.bcl2fastq_bysample_lane[sample][lane] = self.bcl2fastq_data[runId][lane]["samples"][sample]["total"]
-                    self.bcl2fastq_bysample[sample]["total"] += self.bcl2fastq_data[runId][lane]["samples"][sample]["total"]
-                    self.bcl2fastq_bysample[sample]["total_yield"] += self.bcl2fastq_data[runId][lane]["samples"][sample]["total_yield"]
-                    self.bcl2fastq_bysample[sample]["perfectIndex"] += self.bcl2fastq_data[runId][lane]["samples"][sample]["perfectIndex"]
-                    self.bcl2fastq_bysample[sample]["yieldQ30"] += self.bcl2fastq_data[runId][lane]["samples"][sample]["yieldQ30"]
-                    self.bcl2fastq_bysample[sample]["qscore_sum"] += self.bcl2fastq_data[runId][lane]["samples"][sample]["qscore_sum"]
-                    self.bcl2fastq_bysample[sample]["barcode"] = self.bcl2fastq_data[runId][lane]["samples"][sample]["barcode"]
-=======
                         for r in range(1,5):
                                 self.bcl2fastq_bysample[sample_id]["R{}_yield".format(r)] = 0
                                 self.bcl2fastq_bysample[sample_id]["R{}_Q30".format(r)] = 0
@@ -393,7 +334,6 @@ class MultiqcModule(BaseMultiqcModule):
                             s["R{}_trimmed_bases".format(r)] += sample["R{}_trimmed_bases".format(r)]
                         except KeyError:
                             pass
->>>>>>> upstream/master
                     try:
                         s["percent_Q30"] = (float(s["yieldQ30"]) / float(s["total_yield"])) * 100.0
                     except ZeroDivisionError:
@@ -470,6 +410,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "yieldQ30": sample["yieldQ30"],
                 "total": sample["total"],
                 "perfectPercent": perfect_percent,
+                "barcode": sample["barcode"]
             }
             for r in range(1,5):
                 try:
@@ -478,7 +419,6 @@ class MultiqcModule(BaseMultiqcModule):
                 except KeyError:
                     pass
 
->>>>>>> upstream/master
         headers = OrderedDict()
         headers['total'] = {
             'title': 'Clusters',
@@ -510,12 +450,10 @@ class MultiqcModule(BaseMultiqcModule):
             'scale': 'RdYlGn',
             'suffix': '%'
         }
-<<<<<<< HEAD
         headers['barcode'] = {
             'title': 'Barcode',
             'description': 'The combined index sequence (i7 + i5) if present'
         }
-=======
         # If no data for a column, header will be automatically ignored
         for r in range(1,5):
             hideCol = True
@@ -535,7 +473,6 @@ class MultiqcModule(BaseMultiqcModule):
                 }
             except KeyError:
                 pass
->>>>>>> upstream/master
         self.general_stats_addcols(data, headers)
 
     def lane_stats_table(self):
@@ -680,12 +617,6 @@ class MultiqcModule(BaseMultiqcModule):
                 bar_data[key]["undetermined"] = value["undetermined"]
         return bar_data
 
-<<<<<<< HEAD
-def safe_div(x,y):
-    if y == 0:
-        return 0
-    return x / y
-=======
     def get_bar_data_from_undetermined(self, flowcells):
         """ Get data to plot for undetermined barcodes.
         """
@@ -707,4 +638,3 @@ def safe_div(x,y):
         return OrderedDict(
             (key, value) for key, value in islice(bar_data.items(), 20)
         )
->>>>>>> upstream/master
