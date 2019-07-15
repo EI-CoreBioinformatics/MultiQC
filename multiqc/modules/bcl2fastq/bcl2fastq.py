@@ -236,7 +236,7 @@ class MultiqcModule(BaseMultiqcModule):
                     "perfectIndex": 0,
                     "yieldQ30": undeterminedYieldQ30,
                     "qscore_sum": undeterminedQscoreSum,
-                    "barcode": ""
+                    "barcode": "",
                     "trimmed_bases": undeterminedTrimmedBases
                 }
 
