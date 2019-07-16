@@ -17,8 +17,14 @@ class TaxRank(Enum):
 	ORDER = 5
 	FAMILY = 6
 	GENUS = 7
+	SUBGENUS = 7.5
 	SPECIES = 8
+	SUBSPECIES = 8.5
+	NO_RANK = 9
 
+	@classmethod
+	def get(cls, item, alt=cls.ROOT):
+		return cls.__members__.get(item, alt).value
 
 mapping = {
     '0': 'first',
@@ -418,7 +424,7 @@ class MultiqcModule(BaseMultiqcModule):
             rank_part = parts2[1]
             rank = rank_part.split(':')[1][:-1].strip()
             rank = rank.strip()
-            rank_id = TaxRank[rank.upper()].value if rank != '?' else 0
+            rank_id = TaxRank.get(rank.upper().replace(" ", "_").value # TaxRank[rank.upper()].value if rank != '?' else 0
             return name, id, rank, rank_id
 
 
@@ -555,7 +561,8 @@ class MultiqcModule(BaseMultiqcModule):
             h = desc_parts[i].strip()
             #print(h)
             name, id, rank, rank_id = self.parse_taxon(h)
-            lineage_data[TaxRank[rank.upper()].name.lower()] = int(count_parts[i]) if i == 0 else (int(count_parts[i]) - int(count_parts[i - 1]))
+            #lineage_data[TaxRank[rank.upper()].name.lower()] = int(count_parts[i]) if i == 0 else (int(count_parts[i]) - int(count_parts[i - 1]))
+            lineage_data[TaxRank.get(rank.upper()).name.lower()] = int(count_parts[i]) if i == 0 else (int(count_parts[i]) - int(count_parts[i - 1]))
 
         return lineage_data
 
