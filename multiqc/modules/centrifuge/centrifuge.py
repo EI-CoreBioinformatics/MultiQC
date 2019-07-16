@@ -23,8 +23,8 @@ class TaxRank(Enum):
 	NO_RANK = 9
 
 	@classmethod
-	def get(cls, item, alt=cls.ROOT):
-		return cls.__members__.get(item, alt).value
+	def get(cls, item):
+		return cls.__members__.get(item, cls.ROOT)
 
 mapping = {
     '0': 'first',
