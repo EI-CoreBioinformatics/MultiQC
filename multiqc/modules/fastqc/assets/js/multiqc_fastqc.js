@@ -16,6 +16,23 @@ ypos = 0;
 max_bp = 0;
 current_single_plot = undefined;
 
+fastqc_passfails = {}; // { <module>: { <section>: { <sample>: { data } } }
+fastqc_seq_content = {}; // { <module>: { <sample>: data } }
+
+function load_fastqc_passfails() {
+    $('.fastqc_passfails').each(function (i, elem) {
+        var key_value = JSON.parse(elem.innerHTML);
+        fastqc_passfails[key_value[0]] = key_value[1];
+    });
+}
+
+function load_fastqc_seq_content() {
+    $('.fastqc_seq_content').each(function (i, elem) {
+        var key_value = JSON.parse(elem.innerHTML);
+        fastqc_seq_content[key_value[0]] = key_value[1];
+    });
+}
+
 // Function to plot heatmap
 function fastqc_seq_content_heatmap() {
 
@@ -24,9 +41,9 @@ function fastqc_seq_content_heatmap() {
     sample_statuses = [];
     var p_data = {};
     var hidden_samples = 0;
-    $.each(fastqc_seq_content_data, function(s_name, data){
+    $.each(fastqc_seq_content['fastqc'], function(s_name, data){
         // rename sample names
-        var t_status = fastqc_passfails['per_base_sequence_content'][s_name];
+        var t_status = fastqc_passfails['fastqc']['per_base_sequence_content'][s_name];
         $.each(window.mqc_rename_f_texts, function(idx, f_text){
             if(window.mqc_rename_regex_mode){
                 var re = new RegExp(f_text,'g');
@@ -162,32 +179,47 @@ function fastqc_seq_content_heatmap() {
 
 // Set up listeners etc on page load
 $(function () {
+    load_fastqc_seq_content();
+    fastqc_seq_content_heatmap();
 
-    // Add the pass / warning / fails counts to each of the FastQC submodule headings
-    $.each(fastqc_passfails, function(k, vals){
-        var pid = '#fastqc_'+k;
-        var total = 0;
-        var v = { 'pass': 0, 'warn': 0, 'fail': 0 };
-        $.each(vals, function(s_name, status){
-            total += 1;
-            v[status] += 1;
+
+    // Go through each FastQC module in case there are multiple
+    $('.mqc-module-section[id^="mqc-module-section-fastqc"]').each(function(){
+        var module_element = this;
+        var parent_id = $(module_element).attr('id');
+        var module_key = parent_id.replace(/-/g, '_').replace('mqc_module_section_', '');
+
+        // Add the pass / warning / fails counts to each of the FastQC submodule headings
+        $.each(fastqc_passfails[module_key], function(k, vals){
+            var total = 0;
+            var v = { 'pass': 0, 'warn': 0, 'fail': 0 };
+            $.each(vals, function(s_name, status){
+                total += 1;
+                v[status] += 1;
+            });
+            var p_bar = '<div class="progress fastqc_passfail_progress"> \
+                <div class="progress-bar progress-bar-success" style="width: '+(v['pass']/total)*100+'%" title="'+v['pass']+'&nbsp;/&nbsp;'+total+' samples passed">'+v['pass']+'</div> \
+                <div class="progress-bar progress-bar-warning" style="width: '+(v['warn']/total)*100+'%" title="'+v['warn']+'&nbsp;/&nbsp;'+total+' samples with warnings">'+v['warn']+'</div> \
+                <div class="progress-bar progress-bar-danger" style="width: '+(v['fail']/total)*100+'%" title="'+v['fail']+'&nbsp;/&nbsp;'+total+' samples failed">'+v['fail']+'</div> \
+            </div>';
+            $(module_element).find('[id^=fastqc_'+k+']').first().append(p_bar);
         });
-        var p_bar = '<div class="progress fastqc_passfail_progress"> \
-            <div class="progress-bar progress-bar-success" style="width: '+(v['pass']/total)*100+'%" title="'+v['pass']+'&nbsp;/&nbsp;'+total+' samples passed">'+v['pass']+'</div> \
-            <div class="progress-bar progress-bar-warning" style="width: '+(v['warn']/total)*100+'%" title="'+v['warn']+'&nbsp;/&nbsp;'+total+' samples with warnings">'+v['warn']+'</div> \
-            <div class="progress-bar progress-bar-danger" style="width: '+(v['fail']/total)*100+'%" title="'+v['fail']+'&nbsp;/&nbsp;'+total+' samples failed">'+v['fail']+'</div> \
-        </div>';
-        $(pid).append(p_bar);
     });
 
     // Create popovers on click
-    $('.mqc-section-fastqc .fastqc_passfail_progress .progress-bar').mouseover(function(){
+    $('.fastqc_passfail_progress .progress-bar').mouseover(function(){
         // Does this element already have a popover?
         if ($(this).attr('data-original-title')) { return false; }
+        // Get data target
+        var parent_id = $(this).closest('.mqc-module-section').attr('id');
+        var module_key = parent_id.replace(/-/g, '_').replace('mqc_module_section_', '');
         // Create it
         var pid = $(this).closest('h3').attr('id');
         var k = pid.substr(7);
-        var vals = fastqc_passfails[k];
+        // Remove suffix when there are multiple fastqc sections
+        var n = k.indexOf('-');
+        k = k.substring(0, n != -1 ? n : k.length);
+        var vals = fastqc_passfails[module_key][k];
         var passes = $(this).hasClass('progress-bar-success') ? true : false;
         var warns = $(this).hasClass('progress-bar-warning') ? true : false;
         var fails = $(this).hasClass('progress-bar-danger') ? true : false;
@@ -207,7 +239,7 @@ $(function () {
             html: true,
             trigger: 'hover click focus',
             placement: 'bottom auto',
-            template: '<div class="popover popover-'+pclass+'" role="tooltip"> \
+            template: '<div class="popover popover-fastqc-status popover-'+pclass+'" role="tooltip"> \
                 <div class="arrow"></div>\
                 <h3 class="popover-title"></h3>\
                 <div class="fastqc-popover-intro">\
@@ -289,7 +321,7 @@ $(function () {
     });
     $('#fastqc_per_base_sequence_content_plot').on('mqc_plotexport_data', function(e, cfg){
         if(cfg['ft'] == 'json'){
-            json_str = JSON.stringify(fastqc_seq_content_data, null, 2);
+            json_str = JSON.stringify(fastqc_seq_content['fastqc'], null, 2);
             var blob = new Blob([json_str], {type: "text/plain;charset=utf-8"});
             saveAs(blob, cfg['fname']);
         } else {
@@ -302,12 +334,15 @@ $(function () {
 
         // Replace the heading above the heatmap
         var pos = findPos(this);
-        var x = e.pageX - pos.x;
+        var x = e.pageX - pos.x + 3;
         var y = e.pageY - pos.y;
+
         // Get label from y position
         var idx = Math.floor(y/s_height);
         var s_name = sample_names[idx];
         if(s_name === undefined){ return false; }
+
+        // Show the pass/warn/fail status heading for this sample
         var s_status = sample_statuses[s_name];
         var s_status_class = 'label-default';
         if(s_status == 'pass'){ s_status_class = 'label-success'; }
@@ -315,22 +350,31 @@ $(function () {
         if(s_status == 'fail'){ s_status_class = 'label-danger'; }
         $('#fastqc_per_base_sequence_content_plot_div .s_name').html('<span class="glyphicon glyphicon-info-sign"></span> ' + s_name + ' <span class="label s_status '+s_status_class+'">'+s_status+'</span>');
 
-        // Show the sequence base percentages on the bar plots below
-        // http://stackoverflow.com/questions/6735470/get-pixel-color-from-canvas-on-mouseover
-        var ctx = this.getContext('2d');
-        var p = ctx.getImageData(x, y, 1, 1).data;
-        var seq_t = (p[0]/255)*100;
-        var seq_a = (p[1]/255)*100;
-        var seq_c = (p[2]/255)*100;
-        var seq_g = 100 - (seq_t + seq_a + seq_c);
-        $('#fastqc_seq_heatmap_key_t span').text(seq_t.toFixed(0)+'%');
-        $('#fastqc_seq_heatmap_key_c span').text(seq_c.toFixed(0)+'%');
-        $('#fastqc_seq_heatmap_key_a span').text(seq_a.toFixed(0)+'%');
-        $('#fastqc_seq_heatmap_key_g span').text(seq_g.toFixed(0)+'%');
-
-        // Get base pair position from x pos
-        var this_bp = Math.floor((x/c_width)*max_bp);
-        $('#fastqc_seq_heatmap_key_pos').text(this_bp+' bp');
+        // Update the key with the raw data for this position
+        var hover_bp = Math.max(1, Math.floor((x/c_width)*max_bp));
+        var thispoint = fastqc_seq_content['fastqc'][s_name][hover_bp];
+        if(!thispoint){
+            var nearestkey = 0;
+            var guessdata = null;
+            $.each(fastqc_seq_content['fastqc'][s_name], function(bp, v){
+                bp = parseInt(bp);
+                if(bp < hover_bp && bp > nearestkey){
+                    nearestkey = bp;
+                    guessdata = v;
+                }
+            });
+            if(guessdata === null){
+                console.error("Couldn't guess key for "+hover_bp);
+                return false;
+            } else {
+                thispoint = guessdata;
+            }
+        }
+        $('#fastqc_seq_heatmap_key_t span').text(thispoint['t'].toFixed(0)+'%');
+        $('#fastqc_seq_heatmap_key_c span').text(thispoint['c'].toFixed(0)+'%');
+        $('#fastqc_seq_heatmap_key_a span').text(thispoint['a'].toFixed(0)+'%');
+        $('#fastqc_seq_heatmap_key_g span').text(thispoint['g'].toFixed(0)+'%');
+        $('#fastqc_seq_heatmap_key_pos').text(thispoint['base']+' bp');
     });
 
     // Remove sample name again when mouse leaves
@@ -368,14 +412,14 @@ $(function () {
         current_single_plot = s_name;
         // Prep the new plot data
         var plot_data = [[],[],[],[]];
-        var bases = Object.keys(fastqc_seq_content_data[s_name]).sort(function (a, b) {  return a - b;  });
+        var bases = Object.keys(fastqc_seq_content['fastqc'][s_name]).sort(function (a, b) {  return a - b;  });
         for (i=0; i<bases.length; i++){
-          var base = fastqc_seq_content_data[s_name][bases[i]]['base'].toString().split('-');
+          var base = fastqc_seq_content['fastqc'][s_name][bases[i]]['base'].toString().split('-');
           base = parseFloat(base[0]);
-          plot_data[0].push([base, fastqc_seq_content_data[s_name][bases[i]]['t']]);
-          plot_data[1].push([base, fastqc_seq_content_data[s_name][bases[i]]['c']]);
-          plot_data[2].push([base, fastqc_seq_content_data[s_name][bases[i]]['a']]);
-          plot_data[3].push([base, fastqc_seq_content_data[s_name][bases[i]]['g']]);
+          plot_data[0].push([base, fastqc_seq_content['fastqc'][s_name][bases[i]]['t']]);
+          plot_data[1].push([base, fastqc_seq_content['fastqc'][s_name][bases[i]]['c']]);
+          plot_data[2].push([base, fastqc_seq_content['fastqc'][s_name][bases[i]]['a']]);
+          plot_data[3].push([base, fastqc_seq_content['fastqc'][s_name][bases[i]]['g']]);
         }
         // Update the chart
         var hc = $('#fastqc_sequence_content_single').highcharts();
@@ -406,7 +450,7 @@ $(function () {
 
 function plot_single_seqcontent(s_name){
   current_single_plot = s_name;
-  var data = fastqc_seq_content_data[s_name];
+  var data = fastqc_seq_content['fastqc'][s_name];
   var plot_data = [
     {'name': '% T', 'data':[]},
     {'name': '% C', 'data':[]},
@@ -418,10 +462,10 @@ function plot_single_seqcontent(s_name){
     var d = bases[i];
     var base = data[d]['base'].toString().split('-');
     base = parseFloat(base[0]);
-    plot_data[0]['data'].push([base, data[d]['t']]);
-    plot_data[1]['data'].push([base, data[d]['c']]);
-    plot_data[2]['data'].push([base, data[d]['a']]);
-    plot_data[3]['data'].push([base, data[d]['g']]);
+    plot_data[0]['data'].push({x:base, y:data[d]['t'], name:data[d]['base']});
+    plot_data[1]['data'].push({x:base, y:data[d]['c'], name:data[d]['base']});
+    plot_data[2]['data'].push({x:base, y:data[d]['a'], name:data[d]['base']});
+    plot_data[3]['data'].push({x:base, y:data[d]['g'], name:data[d]['base']});
   }
 
   // Create plot div if it doesn't exist, and hide overview
@@ -471,11 +515,13 @@ function plot_single_seqcontent(s_name){
       formatter: function () {
         var texts = [];
         var bars = [];
+        var xlabel = this.x;
         $.each(this.points, function () {
           texts.push('<span style="display: inline-block; border-left: 3px solid '+this.color+'; padding-left:5px; margin-bottom: 2px;"></div>' + this.y.toFixed(1) + this.series.name + '</span>');
           bars.push('<div class="progress-bar" style="width:'+this.y+'%; float:left; font-size:8px; line-height:12px; padding:0; background-color:'+this.color+';">'+this.series.name.replace('%','').trim()+'</div>');
+          if(this.point.name){ xlabel = this.point.name; }
         });
-        return'<p style="font-weight:bold; text-decoration: underline;">Position: ' + this.x + ' bp</p>\
+        return'<p style="font-weight:bold; text-decoration: underline;">Position: ' + xlabel + ' bp</p>\
             <p>'+texts.join('<br>')+'</p><div class="progress" style="height: 12px; width: 150px; margin:0;">'+bars.join('')+'</div>';
       },
 			useHTML: true,

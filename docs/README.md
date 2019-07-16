@@ -5,6 +5,7 @@ Using MultiQC:
   Using Reports: reports.md
   Configuration: config.md
   Customising Reports: customisation.md
+  Using MultiQC in pipelines: pipelines.md
   Common Problems: troubleshooting.md
 MultiQC Modules:
   Pre-alignment:
@@ -14,43 +15,58 @@ MultiQC Modules:
     BioBloom Tools: modules/biobloomtools.md
     Cluster Flow: modules/clusterflow.md
     Cutadapt: modules/cutadapt.md
+    ClipAndMerge: modules/clipandmerge.md
     FastQ Screen: modules/fastq_screen.md
     FastQC: modules/fastqc.md
+    Fastp: modules/fastp.md
+    FLASh: modules/flash.md
     Flexbar: modules/flexbar.md
     InterOp: modules/interop.md
     Jellyfish: modules/jellyfish.md
     KAT: modules/kat.md
     leeHom: modules/leehom.md
+    minionqc: modules/minionqc.md
     Skewer: modules/skewer.md
     SortMeRNA: modules/sortmerna.md
     Trimmomatic: modules/trimmomatic.md
   Aligners:
+    Biscuit: modules/biscuit.md
     Bismark: modules/bismark.md
     Bowtie 1: modules/bowtie1.md
     Bowtie 2: modules/bowtie2.md
     BBMap: modules/bbmap.md
 	Centrifuge: modules/centrifuge.md
     HiCUP: modules/hicup.md
+    HiCPro: modules/hicpro.md
     HISAT2: modules/hisat2.md
     Kallisto: modules/kallisto.md
+    Long Ranger: modules/longranger.md
     Salmon: modules/salmon.md
     STAR: modules/star.md
     TopHat: modules/tophat.md
   Post-alignment:
     Bamtools: modules/bamtools.md
     Bcftools: modules/bcftools.md
+    biobambam2: modules/biobambam2.md
     BUSCO: modules/busco.md
     Conpair: modules/conpair.md
-    Disambiguate: modules/disambiguate.md
+    DamageProfiler: modules/damageprofiler.md
+    DeDup: modules/dedup.md
     deepTools: modules/deeptools.md
+    Disambiguate: modules/disambiguate.md
     featureCounts: modules/featureCounts.md
     GATK: modules/gatk.md
     goleft_indexcov: modules/goleft_indexcov.md
+    Hap.py: modules/happy.md
     HiCExplorer: modules/hicexplorer.md
     HOMER: modules/homer.md
     HTSeq: modules/htseq.md
     MACS2: modules/macs2.md
     Methyl QA: modules/methylQA.md
+    mosdepth: modules/mosdepth.md
+    miRTrace: modules/mirtrace.md
+    MTNucRatio: modules/mtnucratio.md
+    phantompeakqualtools: modules/phantompeakqualtools.md
     Peddy: modules/peddy.md
     Picard: modules/picard.md
     Preseq: modules/preseq.md
@@ -67,6 +83,7 @@ MultiQC Modules:
     Slamdunk: modules/slamdunk.md
     SnpEff: modules/snpeff.md
     Supernova: modules/supernova.md
+    Stacks: modules/stacks.md
     THeTA2: modules/theta2.md
     VCFTools: modules/vcftools.md
     verifyBAMID: modules/verifybamid.md
