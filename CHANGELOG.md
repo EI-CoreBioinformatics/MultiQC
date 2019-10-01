@@ -14,6 +14,7 @@
 #### Module updates:
 * **bcl2fastq**
     * Added handling of demultiplexing of more than 2 reads
+    * Fixed an issue that prevented bcl2fastq from parsing undetermined barcode information when lane indexes did not start at 1
 * **damageprofiler**
     * Added writing metrics to data output file.
 * **fastp**
