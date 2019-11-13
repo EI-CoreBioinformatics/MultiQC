@@ -49,6 +49,15 @@
     * New entrypoint allows easier command-line usage
 * Support opening MultiQC on websites with CSP `script-src 'self'` with some sha256 exceptions
     * Plot data is no longer intertwined with javascript code so hashes stay the same
+* Made `config.report_section_order` work for module sub-sections as well as just modules.
+* New config options `exclude_modules` and `run_modules` to complement `-e` and `-m` cli flags.
+* Command line output is now coloured by default :rainbow: (use `--no-ansi` to turn this off)
+* Better launch comparability due to code refactoring by [@KerstenBreuer](https://github.com/KerstenBreuer) and [@ewels](https://github.com/ewels)
+    * Windows support for base `multiqc` command
+    * Support for running as a python module: `python -m multiqc .`
+    * Support for running within a script: `import multiqc` and `multiqc.run('/path/to/files')`
+* Config option `custom_plot_config` now works for bargraph category configs as well ([#1044](https://github.com/ewels/MultiQC/issues/1044))
+* Config `table_columns_visible` can now be given a module namespace and it will hide all columns from that module ([#541](https://github.com/ewels/MultiQC/issues/541))
 
 #### Bug Fixes:
 * MultiQC now ignores all `.md5` files
