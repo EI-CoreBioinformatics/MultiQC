@@ -407,6 +407,35 @@ class MultiqcModule(BaseMultiqcModule):
         #self.write_data_file(self.cf_data, 'multiqc_centrifuge')
 
     def parse_taxon(self, taxon_str, rank=None):
+        import re
+        #id_rank_pos = re.search("\(id:[0-9]+;rank:[a-zA-Z]+\)", taxon_str)
+        id_rank_pos = re.search("\(id:[0-9]+.*\)", taxon_str)
+        if not id_rank_pos:
+            raise ValueError("Misformatted/Unexpected taxonomy id/rank data: {}".format(taxon_str))
+        parts = [taxon_str[:id_rank_pos.start()].strip(), taxon_str[id_rank_pos.start():].strip()]
+        name = parts[0].strip().lower()
+        name = name[0].capitalize() + name[1:]
+    
+        if rank:
+            id = parts[1][3:-1]
+            rank_name = rank.name.lower()
+            rank_id = rank.value
+            return name, id, rank_name, rank_id
+        else:
+            parts2 = parts[1].split(';')
+            id_part = parts2[0]
+            id = id_part.split(':')[1].strip()
+            rank_part = parts2[1]
+            rank = rank_part.split(':')[1][:-1].strip()
+            rank = rank.strip()
+            rank_id = TaxRank.get(rank.upper().replace(" ", "_")).value # TaxRank[rank.upper()].value if rank != '?' else 0
+            return name, id, rank, rank_id
+
+
+
+
+    """
+    def parse_taxon(self, taxon_str, rank=None):
 
         parts = taxon_str.strip().split('(')
         name = parts[0][:-1].strip().lower()
@@ -426,7 +455,7 @@ class MultiqcModule(BaseMultiqcModule):
             rank = rank.strip()
             rank_id = TaxRank.get(rank.upper().replace(" ", "_")).value # TaxRank[rank.upper()].value if rank != '?' else 0
             return name, id, rank, rank_id
-
+    """
 
 
     def parse_cf_reports(self, content):
