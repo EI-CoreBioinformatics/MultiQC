@@ -408,7 +408,8 @@ class MultiqcModule(BaseMultiqcModule):
 
     def parse_taxon(self, taxon_str, rank=None):
         import re
-        id_rank_pos = re.search("\(id:[0-9]+;rank:[a-zA-Z]+\)", taxon_str)
+        #id_rank_pos = re.search("\(id:[0-9]+;rank:[a-zA-Z]+\)", taxon_str)
+        id_rank_pos = re.search("\(id:[0-9]+.*\)", taxon_str)
         if not id_rank_pos:
             raise ValueError("Misformatted/Unexpected taxonomy id/rank data: {}".format(taxon_str))
         parts = [taxon_str[:id_rank_pos.start()].strip(), taxon_str[id_rank_pos.start():].strip()]
